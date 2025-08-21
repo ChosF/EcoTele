@@ -882,6 +882,8 @@ def _rgb_tuple(color_hex: str) -> Tuple[int, int, int]:
     return int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255)
 
 
+from streamlit_echarts import JsCode
+
 def create_echarts_gauge_option(
     value: float,
     max_val: Optional[float],
@@ -897,21 +899,18 @@ def create_echarts_gauge_option(
     r, g, b = _rgb_tuple(color)
     main_color = f"rgb({r},{g},{b})"
 
-    detail_formatter = JsCode(
-        f"""
-        function (v) {{
-            return (Math.round(v * 10) / 10) + "{suffix}";
-        }}
-        """
+    # ✅ FIX: one-liner JS + use .js_code so it's JSON serializable
+    formatter_code = f"function (v) {{ return (Math.round(v*10)/10) + '{suffix}'; }}"
+    detail_formatter = JsCode(formatter_code).js_code
+
+    axis_color = (
+        [
+            [min(max((thresh_val or 0) / max_val, 0), 1), main_color],
+            [1, "rgba(120,120,120,0.25)"],
+        ]
+        if thresh_val is not None
+        else [[1, main_color]]
     )
-
-    title_formatter = title
-
-    # Threshold line as axisTick color stop
-    axis_color = [
-        [min(max((thresh_val or 0) / max_val, 0), 1), main_color],
-        [1, "rgba(120,120,120,0.25)"],
-    ] if thresh_val is not None else [[1, main_color]]
 
     option = {
         "tooltip": {"show": False},
@@ -933,27 +932,18 @@ def create_echarts_gauge_option(
                 "title": {"show": True, "offsetCenter": [0, "60%"], "fontSize": 12},
                 "detail": {
                     "valueAnimation": True,
-                    "formatter": detail_formatter,
+                    "formatter": detail_formatter,  # ✅ now a string, not a JsCode object
                     "color": "#fff",
                     "fontSize": 16,
                 },
-                "data": [{"value": float(value), "name": title_formatter}],
+                "data": [{"value": float(value), "name": title}],
             }
         ],
         "textStyle": {"color": "#ddd"},
         "backgroundColor": "transparent",
     }
 
-    # Add reference marker line via markLine (approx)
-    if avg_ref is not None and avg_ref > 0:
-        option["series"][0]["markLine"] = {
-            "silent": True,
-            "lineStyle": {"color": "rgba(255,255,255,0.4)", "width": 2, "type": "dashed"},
-            "data": [[{"value": avg_ref}]],
-        }
-
     return option
-
 
 def _to_echarts_time_series(df: pd.DataFrame, x_col: str, y_col: str) -> List[List]:
     """Return [[ts_ms, value], ...] for ECharts time axis."""
