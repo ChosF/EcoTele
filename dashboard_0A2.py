@@ -978,14 +978,53 @@ def _echarts_base_opts(title: str = "") -> Dict[str, Any]:
         "progressive": 2000,
         "progressiveThreshold": 4000,
     }
+def _num_or_none(x) -> Optional[float]:
+    try:
+        if x is None:
+            return None
+        # pandas NA friendly
+        if pd.isna(x):
+            return None
+        v = float(x)
+        if np.isnan(v) or np.isinf(v):
+            return None
+        return v
+    except Exception:
+        return None
+
+
+# Responsive event hook for ECharts to survive hidden tabs / container resizes
+def _echarts_responsive_events() -> Dict[str, str]:
+    # This attaches ResizeObserver + window resize + a short polling fallback.
+    js = (
+        "function(){try{var chart=this;var el=chart.getDom();"
+        "function safe(){try{chart.resize();}catch(e){}}"
+        "window.addEventListener('resize', safe);"
+        "if(typeof ResizeObserver!=='undefined'){"
+        "var ro=new ResizeObserver(function(){safe();});"
+        "ro.observe(el);"
+        "var p=el.parentElement;var n=0;"
+        "while(p&&n<4){try{ro.observe(p);}catch(e){} p=p.parentElement;n++;}"
+        "}"
+        "var tries=0;var iv=setInterval(function(){"
+        "var r=el.getBoundingClientRect();"
+        "if(r.width>0&&r.height>0){safe();clearInterval(iv);} "
+        "if(++tries>20){clearInterval(iv);}"
+        "},200);"
+        "document.addEventListener('visibilitychange',function(){setTimeout(safe,80);});"
+        "}catch(e){console.error(e);}return null;}"
+    )
+    return {"finished": js}
 
 
 def _st_echarts_render(options: Dict[str, Any], height_px: int, key: str):
+    # Always pass responsive events so charts resize when tabs become visible
     st_echarts(
         options=options,
         height=f"{height_px}px",
-        renderer="canvas",  # reliable & fast
+        renderer="canvas",
         key=key,
+        events=_echarts_responsive_events(),
     )
 
 
@@ -1218,21 +1257,16 @@ def render_kpi_header(kpis: Dict[str, float], unique_ns: str = "kpiheader", show
 
 def create_speed_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     if df.empty or "speed_ms" not in df.columns:
-        return {
-            "title": {"text": "No speed data available"},
-            "animation": False,
-        }
+        return {"title": {"text": "No speed data available"}, "animation": False}
 
     opt = _echarts_base_opts("🚗 Vehicle Speed Over Time")
-    src = []
     ts_iso = _ts_to_iso_list(df["timestamp"])
-    spd = pd.to_numeric(df["speed_ms"], errors="coerce").fillna(0.0).astype(float)
-    for t, s in zip(ts_iso, spd):
-        src.append([t, s])
+    spd_raw = pd.to_numeric(df["speed_ms"], errors="coerce")
+    spd = [0.0 if _num_or_none(v) is None else float(v) for v in spd_raw]
 
     opt.update(
         {
-            "dataset": {"source": src},
+            "dataset": {"source": [[t, s] for t, s in zip(ts_iso, spd)]},
             "series": [
                 {
                     "type": "line",
@@ -1247,40 +1281,32 @@ def create_speed_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         }
     )
     return opt
-
-
 def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"voltage_v", "current_a", "power_w"}
-    if df.empty or not need.issubset(set(df.columns)):
+    if df.empty or not need.issubset(df.columns):
         return {"title": {"text": "No power data available"}, "animation": False}
 
     ts = _ts_to_iso_list(df["timestamp"])
-    volt = pd.to_numeric(df["voltage_v"], errors="coerce").fillna(np.nan).astype(float)
-    curr = pd.to_numeric(df["current_a"], errors="coerce").fillna(np.nan).astype(float)
-    pwr = pd.to_numeric(df["power_w"], errors="coerce").fillna(np.nan).astype(float)
+    volt = [ _num_or_none(v) for v in pd.to_numeric(df["voltage_v"], errors="coerce") ]
+    curr = [ _num_or_none(v) for v in pd.to_numeric(df["current_a"], errors="coerce") ]
+    pwr  = [ _num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce") ]
 
     src_top = [[t, v, c] for t, v, c in zip(ts, volt, curr)]
     src_bot = [[t, w] for t, w in zip(ts, pwr)]
 
-    opt = {
+    return {
         "title": {"text": "⚡ Electrical System Performance"},
         "tooltip": {"trigger": "axis"},
         "grid": [
             {"left": "6%", "right": "4%", "top": 40, "height": 180, "containLabel": True},
             {"left": "6%", "right": "4%", "top": 260, "height": 180, "containLabel": True},
         ],
-        "xAxis": [
-            {"type": "time", "gridIndex": 0},
-            {"type": "time", "gridIndex": 1},
-        ],
+        "xAxis": [{"type": "time", "gridIndex": 0}, {"type": "time", "gridIndex": 1}],
         "yAxis": [
             {"type": "value", "gridIndex": 0, "name": "V / A"},
             {"type": "value", "gridIndex": 1, "name": "W"},
         ],
-        "dataset": [
-            {"id": "top", "source": src_top},
-            {"id": "bot", "source": src_bot},
-        ],
+        "dataset": [{"id": "top", "source": src_top}, {"id": "bot", "source": src_bot}],
         "series": [
             {
                 "type": "line",
@@ -1319,32 +1345,29 @@ def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         "axisPointer": {"link": [{"xAxisIndex": "all"}]},
         "animation": False,
         "useDirtyRect": True,
-        "progressive": 2000,
-        "progressiveThreshold": 4000,
-    }
-    return opt
+    }    return opt
 
 
 def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"gyro_x", "gyro_y", "gyro_z", "accel_x", "accel_y", "accel_z"}
-    if df.empty or not need.issubset(set(df.columns)):
+    if df.empty or not need.issubset(df.columns):
         return {"title": {"text": "No IMU data available"}, "animation": False}
 
     df2 = calculate_roll_and_pitch(df)
     ts = _ts_to_iso_list(df2["timestamp"])
 
     def col(v):
-        return pd.to_numeric(df2[v], errors="coerce").fillna(np.nan).astype(float).tolist()
+        return [ _num_or_none(x) for x in pd.to_numeric(df2[v], errors="coerce") ]
 
     gx, gy, gz = col("gyro_x"), col("gyro_y"), col("gyro_z")
     ax, ay, az = col("accel_x"), col("accel_y"), col("accel_z")
     roll, pitch = col("roll_deg"), col("pitch_deg")
 
     src_gyro = [[t, a, b, c] for t, a, b, c in zip(ts, gx, gy, gz)]
-    src_acc = [[t, a, b, c] for t, a, b, c in zip(ts, ax, ay, az)]
-    src_rp = [[t, r, p] for t, r, p in zip(ts, roll, pitch)]
+    src_acc  = [[t, a, b, c] for t, a, b, c in zip(ts, ax, ay, az)]
+    src_rp   = [[t, r, p]     for t, r, p     in zip(ts, roll, pitch)]
 
-    opt = {
+    return {
         "title": {"text": "⚡ IMU System Performance with Roll & Pitch"},
         "tooltip": {"trigger": "axis"},
         "grid": [
@@ -1365,100 +1388,34 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         ],
         "legend": {"top": 10},
         "series": [
-            {
-                "type": "line",
-                "datasetId": "gyro",
-                "name": "Gyro X",
-                "encode": {"x": 0, "y": 1},
-                "xAxisIndex": 0,
-                "yAxisIndex": 0,
-                "showSymbol": False,
-                "lineStyle": {"width": 2, "color": "#e74c3c"},
-                "sampling": "lttb",
-            },
-            {
-                "type": "line",
-                "datasetId": "gyro",
-                "name": "Gyro Y",
-                "encode": {"x": 0, "y": 2},
-                "xAxisIndex": 0,
-                "yAxisIndex": 0,
-                "showSymbol": False,
-                "lineStyle": {"width": 2, "color": "#2ecc71"},
-                "sampling": "lttb",
-            },
-            {
-                "type": "line",
-                "datasetId": "gyro",
-                "name": "Gyro Z",
-                "encode": {"x": 0, "y": 3},
-                "xAxisIndex": 0,
-                "yAxisIndex": 0,
-                "showSymbol": False,
-                "lineStyle": {"width": 2, "color": "#3498db"},
-                "sampling": "lttb",
-            },
-            {
-                "type": "line",
-                "datasetId": "acc",
-                "name": "Accel X",
-                "encode": {"x": 0, "y": 1},
-                "xAxisIndex": 1,
-                "yAxisIndex": 1,
-                "showSymbol": False,
-                "lineStyle": {"width": 2, "color": "#f39c12"},
-                "sampling": "lttb",
-            },
-            {
-                "type": "line",
-                "datasetId": "acc",
-                "name": "Accel Y",
-                "encode": {"x": 0, "y": 2},
-                "xAxisIndex": 1,
-                "yAxisIndex": 1,
-                "showSymbol": False,
-                "lineStyle": {"width": 2, "color": "#9b59b6"},
-                "sampling": "lttb",
-            },
-            {
-                "type": "line",
-                "datasetId": "acc",
-                "name": "Accel Z",
-                "encode": {"x": 0, "y": 3},
-                "xAxisIndex": 1,
-                "yAxisIndex": 1,
-                "showSymbol": False,
-                "lineStyle": {"width": 2, "color": "#34495e"},
-                "sampling": "lttb",
-            },
-            {
-                "type": "line",
-                "datasetId": "rp",
-                "name": "Roll (°)",
-                "encode": {"x": 0, "y": 1},
-                "xAxisIndex": 2,
-                "yAxisIndex": 2,
-                "showSymbol": False,
-                "lineStyle": {"width": 3, "color": "#e377c2"},
-                "sampling": "lttb",
-            },
-            {
-                "type": "line",
-                "datasetId": "rp",
-                "name": "Pitch (°)",
-                "encode": {"x": 0, "y": 2},
-                "xAxisIndex": 2,
-                "yAxisIndex": 2,
-                "showSymbol": False,
-                "lineStyle": {"width": 3, "color": "#17becf"},
-                "sampling": "lttb",
-            },
+            {"type": "line", "datasetId": "gyro", "name": "Gyro X", "encode": {"x": 0, "y": 1},
+             "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False, "lineStyle": {"width": 2, "color": "#e74c3c"},
+             "sampling": "lttb"},
+            {"type": "line", "datasetId": "gyro", "name": "Gyro Y", "encode": {"x": 0, "y": 2},
+             "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False, "lineStyle": {"width": 2, "color": "#2ecc71"},
+             "sampling": "lttb"},
+            {"type": "line", "datasetId": "gyro", "name": "Gyro Z", "encode": {"x": 0, "y": 3},
+             "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False, "lineStyle": {"width": 2, "color": "#3498db"},
+             "sampling": "lttb"},
+            {"type": "line", "datasetId": "acc", "name": "Accel X", "encode": {"x": 0, "y": 1},
+             "xAxisIndex": 1, "yAxisIndex": 1, "showSymbol": False, "lineStyle": {"width": 2, "color": "#f39c12"},
+             "sampling": "lttb"},
+            {"type": "line", "datasetId": "acc", "name": "Accel Y", "encode": {"x": 0, "y": 2},
+             "xAxisIndex": 1, "yAxisIndex": 1, "showSymbol": False, "lineStyle": {"width": 2, "color": "#9b59b6"},
+             "sampling": "lttb"},
+            {"type": "line", "datasetId": "acc", "name": "Accel Z", "encode": {"x": 0, "y": 3},
+             "xAxisIndex": 1, "yAxisIndex": 1, "showSymbol": False, "lineStyle": {"width": 2, "color": "#34495e"},
+             "sampling": "lttb"},
+            {"type": "line", "datasetId": "rp", "name": "Roll (°)", "encode": {"x": 0, "y": 1},
+             "xAxisIndex": 2, "yAxisIndex": 2, "showSymbol": False, "lineStyle": {"width": 3, "color": "#e377c2"},
+             "sampling": "lttb"},
+            {"type": "line", "datasetId": "rp", "name": "Pitch (°)", "encode": {"x": 0, "y": 2},
+             "xAxisIndex": 2, "yAxisIndex": 2, "showSymbol": False, "lineStyle": {"width": 3, "color": "#17becf"},
+             "sampling": "lttb"},
         ],
         "axisPointer": {"link": [{"xAxisIndex": "all"}]},
         "animation": False,
         "useDirtyRect": True,
-        "progressive": 2000,
-        "progressiveThreshold": 4000,
     }
     return opt
 
@@ -1612,24 +1569,28 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
 
 def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"speed_ms", "power_w"}
-    if df.empty or not need.issubset(set(df.columns)):
+    if df.empty or not need.issubset(df.columns):
         return {"title": {"text": "No efficiency data available"}, "animation": False}
 
-    spd = pd.to_numeric(df["speed_ms"], errors="coerce").fillna(np.nan).astype(float)
-    pwr = pd.to_numeric(df["power_w"], errors="coerce").fillna(np.nan).astype(float)
-    volt = (
-        pd.to_numeric(df.get("voltage_v", pd.Series([np.nan] * len(df))), errors="coerce")
-        .fillna(np.nan)
-        .astype(float)
-    )
-    src = [[float(s), float(p), float(v)] for s, p, v in zip(spd, pwr, volt)]
+    spd = [ _num_or_none(v) for v in pd.to_numeric(df["speed_ms"], errors="coerce") ]
+    pwr = [ _num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce") ]
+    volt_raw = pd.to_numeric(df.get("voltage_v", pd.Series([None] * len(df))), errors="coerce")
+    volt = [ _num_or_none(v) for v in volt_raw ]
 
-    opt = {
+    src = [[spd[i], pwr[i], volt[i]] for i in range(len(spd))]
+    v_non_none = [v for v in volt if v is not None]
+    vm_show = len(v_non_none) > 0
+    vmin = min(v_non_none) if vm_show else 0
+    vmax = max(v_non_none) if vm_show else 1
+
+    return {
         "title": {"text": "⚡ Efficiency Analysis: Speed vs Power Consumption"},
         "tooltip": {
             "trigger": "item",
             "formatter": JsCode(
-                "function(p){return 'Speed: '+p.value[0].toFixed(2)+' m/s<br/>Power: '+p.value[1].toFixed(1)+' W'+(isNaN(p.value[2])?'':'<br/>Voltage: '+p.value[2].toFixed(1)+' V');}"
+                "function(p){return 'Speed: ' + (p.value[0]==null?'N/A':p.value[0].toFixed(2)) + ' m/s<br/>' +"
+                "'Power: ' + (p.value[1]==null?'N/A':p.value[1].toFixed(1)) + ' W' +"
+                "(p.value[2]==null ? '' : '<br/>Voltage: ' + p.value[2].toFixed(1) + ' V');}"
             ).js_code,
         },
         "grid": {"left": "6%", "right": "6%", "top": 50, "bottom": 40, "containLabel": True},
@@ -1637,29 +1598,19 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         "yAxis": {"type": "value", "name": "Power (W)"},
         "visualMap": {
             "type": "continuous",
-            "min": float(np.nanmin(volt)) if np.any(~np.isnan(volt)) else 0,
-            "max": float(np.nanmax(volt)) if np.any(~np.isnan(volt)) else 1,
+            "min": vmin,
+            "max": vmax,
             "dimension": 2,
             "inRange": {"color": ["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"]},
             "right": 5,
             "top": "middle",
             "calculable": True,
-            "show": bool(np.any(~np.isnan(volt))),
+            "show": vm_show,
         },
-        "series": [
-            {
-                "type": "scatter",
-                "datasetIndex": 0,
-                "symbolSize": 6,
-                "encode": {"x": 0, "y": 1},
-                "itemStyle": {"opacity": 0.8},
-            }
-        ],
+        "series": [{"type": "scatter", "symbolSize": 6, "encode": {"x": 0, "y": 1}, "itemStyle": {"opacity": 0.8}}],
         "dataset": {"source": src},
         "animation": False,
         "useDirtyRect": True,
-        "progressive": 2000,
-        "progressiveThreshold": 4000,
     }
     return opt
 
