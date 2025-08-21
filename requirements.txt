@@ -8,4 +8,4 @@ ably
 supabase
 streamlit-echarts
 streamlit-raw-echarts
-streamlit-echarts pyecharts
+
