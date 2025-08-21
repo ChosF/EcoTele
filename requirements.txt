@@ -7,3 +7,4 @@ plotly
 ably
 supabase
 streamlit-echarts
+streamlit-raw-echarts
