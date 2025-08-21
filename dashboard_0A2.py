@@ -23,11 +23,20 @@ except ImportError:
 
 # HTML charts: Apache ECharts in Streamlit
 try:
-    from streamlit_echarts import st_echarts, JsCode
+    from streamlit_echarts import st_echarts
     ECHARTS_AVAILABLE = True
 except ImportError:
     ECHARTS_AVAILABLE = False
     st.error("❌ Missing dependency: pip install streamlit-echarts")
+    st.stop()
+
+# JsCode wrapper for JS functions in options
+try:
+    from pyecharts.commons.utils import JsCode
+    PYECHARTS_AVAILABLE = True
+except ImportError:
+    PYECHARTS_AVAILABLE = False
+    st.error("❌ Missing dependency: pip install pyecharts")
     st.stop()
 
 # Handles imports with error checking
@@ -899,7 +908,6 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
             voltage_data = df["voltage_v"].dropna()
             if not voltage_data.empty:
                 kpis["battery_voltage_v"] = max(0, float(voltage_data.iloc[-1]))
-                # battery percentage simple calc
                 nominal_voltage = 50.4
                 max_voltage = 58.5
                 min_voltage = 50.4
@@ -994,7 +1002,6 @@ def create_small_gauge_option(
     avg_ref: Optional[float] = None,
     thresh_val: Optional[float] = None,
 ) -> Dict[str, Any]:
-    # Auto max
     if max_val is None or max_val <= 0:
         max_val = value * 1.2 if value > 0 else 1.0
 
@@ -1035,8 +1042,8 @@ def create_small_gauge_option(
             "fontSize": 16,
             "fontWeight": "bold",
             "formatter": JsCode(
-                f"function(v){{return (v).toFixed(1) + ' {detail_suffix}';}}"
-            ),
+                f"function(v){{return Number(v).toFixed(1) + ' {detail_suffix}';}}"
+            ).js_code,
             "color": "#333",
         },
         "data": [{"value": v, "name": title}],
@@ -1044,7 +1051,6 @@ def create_small_gauge_option(
 
     series = [main_series]
 
-    # Optional threshold needle as overlay
     if thr is not None:
         series.append(
             {
@@ -1073,7 +1079,6 @@ def create_small_gauge_option(
             }
         )
 
-    # Optional avg delta indicator in title-like text
     title_str = title
     if avg_ref is not None and avg_ref > 0:
         delta = v - float(avg_ref)
@@ -1311,7 +1316,7 @@ def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
                 "yAxisIndex": 1,
             },
         ],
-        "axisPointer": {"link": [{"xAxisIndex": "all"}]},  # sync hover
+        "axisPointer": {"link": [{"xAxisIndex": "all"}]},
         "animation": False,
         "useDirtyRect": True,
         "progressive": 2000,
@@ -1449,7 +1454,6 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
                 "sampling": "lttb",
             },
         ],
-        # link axisPointer across grids
         "axisPointer": {"link": [{"xAxisIndex": "all"}]},
         "animation": False,
         "useDirtyRect": True,
@@ -1474,9 +1478,7 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     ax, ay, az = col("accel_x"), col("accel_y"), col("accel_z")
     roll, pitch = col("roll_deg"), col("pitch_deg")
 
-    src = [[t, *vals] for t, vals in zip(ts, zip(gx, gy, gz, ax, ay, az, roll, pitch))]
-
-    # We'll create 9 grids, each with an assigned x/y axis index
+    # nine grids: 3x3
     grids = []
     x_axes = []
     y_axes = []
@@ -1494,12 +1496,10 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         "🎯 R&P Combined",
     ]
 
-    # layout: 3 rows x 3 cols
     top_offsets = [40, 260, 480]
     left_offsets = ["6%", "36%", "66%"]
     height = 180
 
-    # columns mapping for y data
     col_map = {
         0: 1,  # Gyro X
         1: 2,  # Gyro Y
@@ -1512,7 +1512,6 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         8: None,  # combined
     }
 
-    # Build 9 grids
     grid_idx = 0
     for r in range(3):
         for c in range(3):
@@ -1529,11 +1528,8 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             y_axes.append({"type": "value", "gridIndex": grid_idx})
             grid_idx += 1
 
-    # Series definitions
-    # We'll push datasets once; all series refer to the same dataset
     for i in range(9):
         if i == 8:
-            # combined Roll & Pitch
             series.append(
                 {
                     "type": "line",
@@ -1585,16 +1581,21 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
                             else "#e377c2"
                             if i == 6
                             else "#17becf"
-                        )
+                        ),
                     },
                     "sampling": "lttb",
                 }
             )
 
+    dataset_source = [
+        [t, gx[i], gy[i], gz[i], ax[i], ay[i], az[i], roll[i], pitch[i]]
+        for i, t in enumerate(ts)
+    ]
+
     opt = {
         "title": {"text": "🎮 Detailed IMU Sensor Analysis with Roll & Pitch"},
         "tooltip": {"trigger": "axis"},
-        "dataset": {"source": [[t, gx[i], gy[i], gz[i], ax[i], ay[i], az[i], roll[i], pitch[i]] for i, t in enumerate(ts)]},
+        "dataset": {"source": dataset_source},
         "grid": grids,
         "xAxis": x_axes,
         "yAxis": y_axes,
@@ -1629,7 +1630,7 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             "trigger": "item",
             "formatter": JsCode(
                 "function(p){return 'Speed: '+p.value[0].toFixed(2)+' m/s<br/>Power: '+p.value[1].toFixed(1)+' W'+(isNaN(p.value[2])?'':'<br/>Voltage: '+p.value[2].toFixed(1)+' V');}"
-            ),
+            ).js_code,
         },
         "grid": {"left": "6%", "right": "6%", "top": 50, "bottom": 40, "containLabel": True},
         "xAxis": {"type": "value", "name": "Speed (m/s)"},
@@ -1643,7 +1644,7 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             "right": 5,
             "top": "middle",
             "calculable": True,
-            "show": np.any(~np.isnan(volt)),
+            "show": bool(np.any(~np.isnan(volt))),
         },
         "series": [
             {
@@ -1702,7 +1703,6 @@ def create_gps_map_with_altitude_option(df: pd.DataFrame) -> Dict[str, Any]:
         except Exception:
             dfw["timestamp"] = pd.to_datetime(dfw[time_col], errors="coerce")
 
-    # Filter invalid coordinates
     valid_mask = (
         (~dfw["latitude"].isna())
         & (~dfw["longitude"].isna())
@@ -1721,7 +1721,6 @@ def create_gps_map_with_altitude_option(df: pd.DataFrame) -> Dict[str, Any]:
     else:
         df_filtered = df_filtered.reset_index(drop=True)
 
-    # Build dataset with tooltip fields
     ts_iso = _ts_to_iso_list(df_filtered.get("timestamp", pd.Series(index=df_filtered.index)))
     speed = pd.to_numeric(df_filtered.get("speed_ms", np.nan), errors="coerce").astype(float)
     curr = pd.to_numeric(df_filtered.get("current_a", np.nan), errors="coerce").astype(float)
@@ -1730,25 +1729,31 @@ def create_gps_map_with_altitude_option(df: pd.DataFrame) -> Dict[str, Any]:
     lat = df_filtered["latitude"].astype(float)
     lon = df_filtered["longitude"].astype(float)
 
-    src_track = [[float(lon[i]), float(lat[i]), ts_iso[i], float(speed[i]) if not np.isnan(speed[i]) else None,
-                  float(curr[i]) if not np.isnan(curr[i]) else None,
-                  float(pwr[i]) if not np.isnan(pwr[i]) else None] for i in range(len(df_filtered))]
-
-    # Altitude panel
+    src_track = [
+        [
+            float(lon[i]),
+            float(lat[i]),
+            ts_iso[i],
+            float(speed[i]) if not np.isnan(speed[i]) else None,
+            float(curr[i]) if not np.isnan(curr[i]) else None,
+            float(pwr[i]) if not np.isnan(pwr[i]) else None,
+        ]
+        for i in range(len(df_filtered))
+    ]
     src_alt = [[ts_iso[i], float(alt[i]) if not np.isnan(alt[i]) else None] for i in range(len(df_filtered))]
 
-    tooltip_fmt = JsCode(
+    tooltip_fmt_code = JsCode(
         "function(p){var v=p.value;return 'Time: '+(v[2]||'')+'<br/>Speed: '+"
         "(v[3]==null?'N/A':v[3].toFixed(2)+' m/s')+'<br/>Current: '+"
         "(v[4]==null?'N/A':v[4].toFixed(2)+' A')+'<br/>Power: '+"
         "(v[5]==null?'N/A':v[5].toFixed(1)+' W');}"
-    )
+    ).js_code
 
     opt = {
         "title": {"text": "🛰️ GPS Tracking and Altitude Analysis"},
         "grid": [
-            {"left": "6%", "right": "40%", "top": 50, "height": 420, "containLabel": True},  # track
-            {"left": "64%", "right": "6%", "top": 50, "height": 420, "containLabel": True},  # altitude
+            {"left": "6%", "right": "40%", "top": 50, "height": 420, "containLabel": True},
+            {"left": "64%", "right": "6%", "top": 50, "height": 420, "containLabel": True},
         ],
         "xAxis": [
             {"type": "value", "gridIndex": 0, "name": "Longitude"},
@@ -1773,7 +1778,7 @@ def create_gps_map_with_altitude_option(df: pd.DataFrame) -> Dict[str, Any]:
                 "yAxisIndex": 0,
                 "showSymbol": False,
                 "lineStyle": {"width": 2, "color": "#1f77b4"},
-                "tooltip": {"formatter": tooltip_fmt},
+                "tooltip": {"formatter": tooltip_fmt_code},
                 "sampling": "lttb",
             },
             {
@@ -1785,7 +1790,7 @@ def create_gps_map_with_altitude_option(df: pd.DataFrame) -> Dict[str, Any]:
                 "yAxisIndex": 0,
                 "symbolSize": 4,
                 "itemStyle": {"color": "#1f77b4", "opacity": 0.6},
-                "tooltip": {"formatter": tooltip_fmt},
+                "tooltip": {"formatter": tooltip_fmt_code},
             },
             {
                 "type": "line",
@@ -1825,7 +1830,6 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
     title = chart_config.get("title", f"{y_col} vs {x_col}")
 
     if chart_type == "heatmap":
-        # correlation heatmap
         numeric_cols = get_available_columns(df)
         if len(numeric_cols) < 2:
             return {"title": {"text": "Need at least 2 numeric columns"}, "animation": False}
@@ -1864,7 +1868,6 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
             "useDirtyRect": True,
         }
 
-    # non-heatmap types
     if not y_col or y_col not in df.columns:
         return {"title": {"text": "Invalid Y-axis selection"}, "animation": False}
 
@@ -1888,7 +1891,6 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
             "useDirtyRect": True,
         }
 
-    # line / scatter / bar
     x_is_time = x_col == "timestamp"
     if x_is_time:
         x_vals = _ts_to_iso_list(df[x_col])
@@ -2203,8 +2205,8 @@ def main():
         unsafe_allow_html=True,
     )
 
-    if not ECHARTS_AVAILABLE:
-        st.error("ECharts component missing. Install with: pip install streamlit-echarts")
+    if not ECHARTS_AVAILABLE or not PYECHARTS_AVAILABLE:
+        st.error("ECharts/JsCode component missing. Install: pip install streamlit-echarts pyecharts")
         return
 
     initialize_session_state()
@@ -2684,4 +2686,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
