@@ -943,9 +943,9 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
             if not voltage_data.empty:
                 kpis["battery_voltage_v"] = max(0, voltage_data.iloc[-1])
                 # Simple battery percentage calculation (assuming 48V nominal)
-                nominal_voltage = 48.0
-                max_voltage = 55.0
-                min_voltage = 40.0
+                nominal_voltage = 50.4
+                max_voltage = 58.5
+                min_voltage = 50.4
                 current_voltage = kpis["battery_voltage_v"]
                 if current_voltage > min_voltage:
                     kpis["battery_percentage"] = min(
