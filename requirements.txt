@@ -6,4 +6,4 @@ seaborn
 plotly
 ably
 supabase
-streamlit-autorefresh
+streamlit-echarts
