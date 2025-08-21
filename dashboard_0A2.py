@@ -1345,7 +1345,7 @@ def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         "axisPointer": {"link": [{"xAxisIndex": "all"}]},
         "animation": False,
         "useDirtyRect": True,
-    }    return opt
+    }    
 
 
 def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
@@ -1417,7 +1417,7 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         "animation": False,
         "useDirtyRect": True,
     }
-    return opt
+    
 
 
 def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
