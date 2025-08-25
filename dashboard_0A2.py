@@ -1140,7 +1140,7 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
             max_val=max(100, kpis["max_speed_kmh"] + 5),
             title="Speed",
             color_hex="#1f77b4",
-            suffix="km/h",
+            suffix="",
         )
         _st_echarts_render(opt, 140, key=f"{unique_ns}_gauge_speed")
         st.markdown("</div>", unsafe_allow_html=True)
@@ -1163,7 +1163,7 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
         )
         opt = create_small_gauge_option(
             kpis["avg_power_w"], max_val=max(1000, kpis["avg_power_w"] * 2 + 1), title="Power",
-            color_hex="#ff7f0e", suffix="W"
+            color_hex="#ff7f0e", suffix=""
         )
         _st_echarts_render(opt, 140, key=f"{unique_ns}_gauge_power")
         st.markdown("</div>", unsafe_allow_html=True)
