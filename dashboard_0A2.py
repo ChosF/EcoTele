@@ -2549,10 +2549,9 @@ def main():
         "<div style='text-align: center; opacity: 0.8; padding: 1rem;'>"
         "<p>Shell Eco-marathon Telemetry Dashboard</p>"
         "</div>",
-        unsafe_allow_html=True,
-        
-    first_load_splash()
+        unsafe_allow_html=True,    
     )
-
+    first_load_splash()
+    
 if __name__ == "__main__":
     main()
