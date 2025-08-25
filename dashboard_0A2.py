@@ -1,4 +1,56 @@
-import streamlit as st
+def _echarts_responsive_events() -> Dict[str, str]:
+    # Install robust resize hooks once per chart DOM.
+    # - Attach on both 'rendered' and 'finished' to handle no-animation / hidden init cases
+    # - Add ResizeObserver + window resize
+    # - Add MutationObserver on Streamlit tabs to trigger resize on tab switch
+    # - Poll briefly until container gets non-zero size
+    js = (
+        "function(){"
+        "  try{"
+        "    var chart=this;"
+        "    var el=chart.getDom();"
+        "    if(!el.__echarts_hooks_installed__){"
+        "      function safe(){try{chart.resize();}catch(e){}}"
+        "      // Window resize"
+        "      window.addEventListener('resize', safe, {passive:true});"
+        "      // ResizeObserver up the DOM tree"
+        "      if(typeof ResizeObserver!=='undefined'){"
+        "        var ro=new ResizeObserver(function(){safe();});"
+        "        try{ro.observe(el);}catch(e){}"
+        "        var p=el.parentElement;var n=0;"
+        "        while(p&&n<5){try{ro.observe(p);}catch(e){} p=p.parentElement;n++;}"
+        "      }"
+        "      // Observe Streamlit's tab selection changes"
+        "      if(typeof MutationObserver!=='undefined'){"
+        "        var tablist=document.querySelector('[data-baseweb=\"tab-list\"]');"
+        "        if(tablist){"
+        "          var mo=new MutationObserver(function(muts){setTimeout(safe,80);});"
+        "          try{mo.observe(tablist,{attributes:true,subtree:true,attributeFilter:['aria-selected']});}catch(e){}"
+        "        }"
+        "      }"
+        "      // Also bind click on tabs as a fallback"
+        "      var tabs=document.querySelectorAll('[data-baseweb=\"tab\"]');"
+        "      tabs&&tabs.forEach(function(t){t.addEventListener('click', function(){setTimeout(safe,80);}, {passive:true});});"
+        "      // Visibility changes (e.g. switching windows)"
+        "      document.addEventListener('visibilitychange',function(){setTimeout(safe,80);});"
+        "      // Short polling until element gets a size"
+        "      var tries=0;var iv=setInterval(function(){"
+        "        var r=el.getBoundingClientRect();"
+        "        if(r.width>0&&r.height>0){safe();clearInterval(iv);} "
+        "        if(++tries>50){clearInterval(iv);}"
+        "      },160);"
+        "      el.__echarts_hooks_installed__=true;"
+        "    }"
+        "    var r=el.getBoundingClientRect();"
+        "    return {ev:'hooks', w:r.width||0, h:r.height||0, hidden:(r.width===0||r.height===0)};"
+        "  }catch(e){"
+        "    console.error(e);"
+        "    return {ev:'error', msg:String(e)};"
+        "  }"
+        "}"
+    )
+    # Install on both events to maximize chances of executing
+    return {"rendered": js, "finished": js}import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, timezone
@@ -995,37 +1047,78 @@ def _num_or_none(x) -> Optional[float]:
 
 # Responsive event hook for ECharts to survive hidden tabs / container resizes
 def _echarts_responsive_events() -> Dict[str, str]:
-    # This attaches ResizeObserver + window resize + a short polling fallback.
+    # Install robust resize hooks once per chart DOM.
+    # - Attach on both 'rendered' and 'finished' to handle no-animation / hidden init cases
+    # - Add ResizeObserver + window resize
+    # - Add MutationObserver on Streamlit tabs to trigger resize on tab switch
+    # - Poll briefly until container gets non-zero size
     js = (
-        "function(){try{var chart=this;var el=chart.getDom();"
-        "function safe(){try{chart.resize();}catch(e){}}"
-        "window.addEventListener('resize', safe);"
-        "if(typeof ResizeObserver!=='undefined'){"
-        "var ro=new ResizeObserver(function(){safe();});"
-        "ro.observe(el);"
-        "var p=el.parentElement;var n=0;"
-        "while(p&&n<4){try{ro.observe(p);}catch(e){} p=p.parentElement;n++;}"
+        "function(){"
+        "  try{"
+        "    var chart=this;"
+        "    var el=chart.getDom();"
+        "    if(!el.__echarts_hooks_installed__){"
+        "      function safe(){try{chart.resize();}catch(e){}}"
+        "      // Window resize"
+        "      window.addEventListener('resize', safe, {passive:true});"
+        "      // ResizeObserver up the DOM tree"
+        "      if(typeof ResizeObserver!=='undefined'){"
+        "        var ro=new ResizeObserver(function(){safe();});"
+        "        try{ro.observe(el);}catch(e){}"
+        "        var p=el.parentElement;var n=0;"
+        "        while(p&&n<5){try{ro.observe(p);}catch(e){} p=p.parentElement;n++;}"
+        "      }"
+        "      // Observe Streamlit's tab selection changes"
+        "      if(typeof MutationObserver!=='undefined'){"
+        "        var tablist=document.querySelector('[data-baseweb=\"tab-list\"]');"
+        "        if(tablist){"
+        "          var mo=new MutationObserver(function(muts){setTimeout(safe,80);});"
+        "          try{mo.observe(tablist,{attributes:true,subtree:true,attributeFilter:['aria-selected']});}catch(e){}"
+        "        }"
+        "      }"
+        "      // Also bind click on tabs as a fallback"
+        "      var tabs=document.querySelectorAll('[data-baseweb=\"tab\"]');"
+        "      tabs&&tabs.forEach(function(t){t.addEventListener('click', function(){setTimeout(safe,80);}, {passive:true});});"
+        "      // Visibility changes (e.g. switching windows)"
+        "      document.addEventListener('visibilitychange',function(){setTimeout(safe,80);});"
+        "      // Short polling until element gets a size"
+        "      var tries=0;var iv=setInterval(function(){"
+        "        var r=el.getBoundingClientRect();"
+        "        if(r.width>0&&r.height>0){safe();clearInterval(iv);} "
+        "        if(++tries>50){clearInterval(iv);}"
+        "      },160);"
+        "      el.__echarts_hooks_installed__=true;"
+        "    }"
+        "    var r=el.getBoundingClientRect();"
+        "    return {ev:'hooks', w:r.width||0, h:r.height||0, hidden:(r.width===0||r.height===0)};"
+        "  }catch(e){"
+        "    console.error(e);"
+        "    return {ev:'error', msg:String(e)};"
+        "  }"
         "}"
-        "var tries=0;var iv=setInterval(function(){"
-        "var r=el.getBoundingClientRect();"
-        "if(r.width>0&&r.height>0){safe();clearInterval(iv);} "
-        "if(++tries>20){clearInterval(iv);}"
-        "},200);"
-        "document.addEventListener('visibilitychange',function(){setTimeout(safe,80);});"
-        "}catch(e){console.error(e);}return null;}"
     )
-    return {"finished": js}
-
+    # Install on both events to maximize chances of executing
+    return {"rendered": js, "finished": js}
 
 def _st_echarts_render(options: Dict[str, Any], height_px: int, key: str):
     # Always pass responsive events so charts resize when tabs become visible
-    st_echarts(
-        options=options,
-        height=f"{height_px}px",
-        renderer="canvas",
-        key=key,
-        events=_echarts_responsive_events(),
-    )
+    try:
+        evt = st_echarts(
+            options=options,
+            height=f"{height_px}px",
+            renderer="canvas",
+            key=key,
+            events=_echarts_responsive_events(),
+        )
+        # Log event payloads (width/height/hidden) for debugging
+        if evt:
+            logging.getLogger("TelemetryDashboard").info(
+                f"ECharts[{key}] event: {evt}"
+            )
+    except Exception as e:
+        logging.getLogger("TelemetryDashboard").error(
+            f"ECharts render error [{key}]: {e}"
+        )
 
 
 # ---------------------------
