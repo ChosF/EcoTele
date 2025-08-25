@@ -90,16 +90,18 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------
-# Merged and Enhanced Theme-Aware CSS (kept)
+# Theme-Aware CSS (neutral greyscale + segmented nav)
 # -------------------------------------------------------
 def get_theme_aware_css():
     return """
 <style>
 :root {
   color-scheme: light dark;
-  --brand-1: 222 35% 56%;
-  --brand-2: 280 32% 62%;
-  --accent-1: 158 30% 52%;
+
+  /* Greyscale palette for a minimal look */
+  --brand-1: 0 0% 56%;
+  --brand-2: 0 0% 62%;
+  --accent-1: 0 0% 52%;
 
   --primary: hsl(var(--brand-1));
   --accent: hsl(var(--brand-2));
@@ -132,19 +134,22 @@ def get_theme_aware_css():
 }
 
 [data-testid="stAppViewContainer"] {
+  /* Subtle neutral gradients only */
   background:
-    radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, hsl(var(--brand-2)) 8%, transparent), transparent 60%),
-    radial-gradient(1300px 700px at 110% 110%, color-mix(in oklab, hsl(var(--brand-1)) 6%, transparent), transparent 60%),
-    radial-gradient(900px 520px at 50% 50%, color-mix(in oklab, hsl(var(--accent-1)) 6%, transparent), transparent 65%),
-    linear-gradient(180deg, color-mix(in oklab, hsl(var(--brand-1)) 3%, var(--bg)) 0%, var(--bg) 60%);
+    radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, var(--text) 8%, transparent), transparent 60%),
+    radial-gradient(1300px 700px at 110% 110%, color-mix(in oklab, var(--text) 6%, transparent), transparent 60%),
+    radial-gradient(900px 520px at 50% 50%, color-mix(in oklab, var(--text) 6%, transparent), transparent 65%),
+    linear-gradient(180deg, color-mix(in oklab, var(--text) 3%, var(--bg)) 0%, var(--bg) 60%);
   background-attachment: fixed;
 }
 
 [data-testid="stHeader"] {
-  background: linear-gradient(90deg,
-              color-mix(in oklab, hsl(var(--brand-1)) 12%, transparent),
-              color-mix(in oklab, hsl(var(--brand-2)) 12%, transparent))
-              , var(--glass);
+  background:
+    linear-gradient(90deg,
+      color-mix(in oklab, var(--text) 12%, transparent),
+      color-mix(in oklab, var(--text) 12%, transparent)
+    ),
+    var(--glass);
   backdrop-filter: blur(18px) saturate(140%);
   border-bottom: 1px solid var(--glass-border);
 }
@@ -153,8 +158,8 @@ html, body { color: var(--text); }
 .main-header {
   font-size: 2.25rem; font-weight: 800; letter-spacing: .2px;
   background: linear-gradient(90deg,
-              color-mix(in oklab, hsl(var(--brand-1)) 65%, var(--text)),
-              color-mix(in oklab, hsl(var(--brand-2)) 65%, var(--text)));
+              color-mix(in oklab, var(--text) 65%, var(--text)),
+              color-mix(in oklab, var(--text) 65%, var(--text)));
   -webkit-background-clip: text; background-clip: text; color: transparent;
   text-align: center; margin: .25rem 0 1rem;
 }
@@ -169,16 +174,13 @@ html, body { color: var(--text); }
 
 /* Cards */
 .card { border-radius:18px; padding:1.1rem; border:1px solid var(--glass-border);
-  background:
-    radial-gradient(120% 130% at 85% 15%, color-mix(in oklab, hsl(var(--brand-2)) 5%, transparent), transparent 60%),
-    radial-gradient(130% 120% at 15% 85%, color-mix(in oklab, hsl(var(--brand-1)) 5%, transparent), transparent 60%),
-    var(--glass);
+  background: var(--glass);
   backdrop-filter: blur(18px) saturate(140%); box-shadow: var(--shadow-1);
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: var(--border-strong); }
 .card-strong { background: var(--glass-strong); border:1px solid var(--border); }
-.session-info h3 { color: hsl(var(--brand-1)); margin:0 0 .5rem; font-weight:800; }
+.session-info h3 { color: color-mix(in oklab, var(--text) 80%, var(--bg)); margin:0 0 .5rem; font-weight:800; }
 .session-info p { margin:.25rem 0; color: var(--text-muted); }
 
 /* Notifications */
@@ -189,63 +191,57 @@ html, body { color: var(--text); }
 /* Gauges grid */
 .widget-grid { display:grid; grid-template-columns: repeat(6, 1fr); gap:1rem; margin-top: .75rem; }
 .gauge-container { text-align:center; padding:.75rem; border-radius:16px; border:1px solid var(--glass-border);
-  background:
-    radial-gradient(120% 120% at 85% 15%, color-mix(in oklab, hsl(var(--brand-1)) 4%, transparent), transparent 60%),
-    radial-gradient(120% 130% at 20% 80%, color-mix(in oklab, hsl(var(--brand-2)) 4%, transparent), transparent 60%),
-    var(--glass);
+  background: var(--glass);
   backdrop-filter: blur(10px); transition: transform .2s ease, border-color .2s ease, background .2s ease; }
 .gauge-container:hover { transform: translateY(-2px); border-color: var(--border); }
 .gauge-title { font-size:.85rem; font-weight:600; color:var(--text-subtle); margin-bottom:.25rem; }
 
 /* Chart wrappers */
 .chart-wrap { border-radius:18px; border:1px solid var(--glass-border);
-  background:
-    radial-gradient(110% 120% at 85% 10%, color-mix(in oklab, hsl(var(--brand-1)) 3%, transparent), transparent 60%),
-    var(--glass);
+  background: var(--glass);
   padding:.75rem; box-shadow: var(--shadow-1); }
 
 /* Buttons */
 .stButton > button, div[data-testid="stDownloadButton"] > button {
   border-radius:12px !important; font-weight:700 !important; color:var(--text) !important;
   background: linear-gradient(135deg,
-              color-mix(in oklab, hsl(var(--brand-1)) 28%, var(--bg)),
-              color-mix(in oklab, hsl(var(--brand-2)) 28%, var(--bg))) !important;
-  border: 1px solid color-mix(in oklab, hsl(var(--brand-1)) 20%, var(--border-strong)) !important;
-  box-shadow: 0 6px 16px color-mix(in oklab, hsl(var(--brand-1)) 15%, transparent) !important;
+              color-mix(in oklab, var(--text) 28%, var(--bg)),
+              color-mix(in oklab, var(--text) 28%, var(--bg))) !important;
+  border: 1px solid color-mix(in oklab, var(--text) 20%, var(--border-strong)) !important;
+  box-shadow: 0 6px 16px color-mix(in oklab, var(--text) 15%, transparent) !important;
   transition: transform .15s ease, box-shadow .2s ease !important;
 }
 .stButton > button:hover, div[data-testid="stDownloadButton"] > button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px color-mix(in oklab, hsl(var(--brand-2)) 18%, transparent) !important;
+  box-shadow: 0 10px 22px color-mix(in oklab, var(--text) 18%, transparent) !important;
 }
 .stButton > button:active, div[data-testid="stDownloadButton"] > button:active { transform: translateY(0); }
 
-/* Tabs */
+/* Streamlit tabs (kept) */
 .stTabs [data-baseweb="tab-list"] { border-bottom: 1px solid var(--border); gap:6px; }
 .stTabs [data-baseweb="tab"] { border:none; border-radius:10px 10px 0 0; background: transparent; color: var(--text-muted);
   font-weight:600; padding:.6rem 1rem; transition: color .2s ease, background .2s ease; }
 .stTabs [data-baseweb="tab"]:hover { color: var(--text); background: var(--glass); }
-.stTabs [data-baseweb="tab"][aria-selected="true"] { color: color-mix(in oklab, hsl(var(--brand-1)) 60%, var(--text)); box-shadow: inset 0 -3px 0 0 color-mix(in oklab, hsl(var(--brand-1)) 60%, var(--text)); }
+.stTabs [data-baseweb="tab"][aria-selected="true"] { color: color-mix(in oklab, var(--text) 90%, var(--bg)); box-shadow: inset 0 -3px 0 0 color-mix(in oklab, var(--text) 60%, var(--bg)); }
 
-/* Custom chart type cards */
-.chart-type-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:.75rem; }
-.chart-type-card { border-radius:16px; padding:1rem; border:1px solid var(--glass-border); box-shadow: var(--shadow-1);
-  background:
-    radial-gradient(130% 120% at 20% 15%, color-mix(in oklab, hsl(var(--brand-2)) 4%, transparent), transparent 60%),
-    var(--glass);
+/* Segmented radio navigation (styled like tabs) */
+[data-baseweb="radio"] { background: var(--glass); border:1px solid var(--glass-border);
+  border-radius:12px; padding:6px; display:inline-flex; gap:6px; }
+[data-baseweb="radio"] label { margin:0; }
+[data-baseweb="radio"] [role="radio"] {
+  border-radius:10px; padding:.45rem .8rem; font-weight:700; color: var(--text-subtle);
+  transition: background .2s ease, color .2s ease, box-shadow .2s ease;
 }
-.chart-type-name { font-weight:800; background: linear-gradient(90deg,
-                 color-mix(in oklab, hsl(var(--brand-1)) 60%, var(--text)),
-                 color-mix(in oklab, hsl(var(--brand-2)) 60%, var(--text)));
-                 -webkit-background-clip:text; background-clip:text; color: transparent; }
-.chart-type-desc { color: var(--text-muted); }
+[data-baseweb="radio"] [role="radio"][aria-checked="true"] {
+  background: color-mix(in oklab, var(--text) 12%, transparent);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+}
 
 /* Data containers */
 [data-testid="stDataFrame"], [data-testid="stExpander"], [data-testid="stAlert"] {
   border-radius:16px; border:1px solid var(--border);
-  background:
-    radial-gradient(120% 120% at 80% 10%, color-mix(in oklab, hsl(var(--brand-1)) 3%, transparent), transparent 60%),
-    var(--glass);
+  background: var(--glass);
   backdrop-filter: blur(10px);
 }
 
@@ -254,10 +250,7 @@ div[data-testid="stMetric"] {
   position: relative;
   border-radius: 18px;
   padding: 1rem 1.1rem;
-  background:
-    radial-gradient(120% 140% at 10% 0%, color-mix(in oklab, hsl(var(--brand-1)) 7%, transparent), transparent 60%),
-    radial-gradient(140% 120% at 90% 100%, color-mix(in oklab, hsl(var(--brand-2)) 7%, transparent), transparent 60%),
-    var(--glass);
+  background: var(--glass);
   backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-1);
@@ -280,13 +273,12 @@ div[data-baseweb="input"] > div { background: var(--glass); border-radius:10px; 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: color-mix(in oklab, hsl(var(--brand-1)) 50%, var(--border-strong)); }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in oklab, var(--text) 50%, var(--border-strong)); }
 
 /* Focus ring */
-*:focus-visible { outline: 2px solid color-mix(in oklab, hsl(var(--brand-1)) 55%, var(--text)); outline-offset:2px; border-radius:4px; }
-/* --- streamlit-echarts reliability in tabs ---
-   In tabs, the inner iframe can collapse to 0px; force a sane min-height
-   so ECharts has a non-zero box to initialize against. */
+*:focus-visible { outline: 2px solid color-mix(in oklab, var(--text) 55%, var(--bg)); outline-offset:2px; border-radius:4px; }
+
+/* ECharts iframe min height */
 iframe[title="streamlit_echarts.st_echarts"] {
   min-height: 160px !important;
   width: 100% !important;
@@ -314,11 +306,9 @@ def setup_terminal_logging():
 setup_terminal_logging()
 
 
-
 def first_load_splash():
     if st.session_state.get("_first_load", True):
         with st.spinner("Preparing charts and layout..."):
-            # Short delay to let Streamlit layout stabilize
             time.sleep(0.6)
         st.session_state["_first_load"] = False
         st.rerun()
@@ -326,7 +316,6 @@ def first_load_splash():
 
 class EnhancedTelemetryManager:
     """Telemetry manager with multi-source data integration and pagination support."""
-
     def __init__(self):
         self.realtime_subscriber = None
         self.supabase_client = None
@@ -984,14 +973,15 @@ def _ts_to_iso_list(ts: pd.Series) -> List[str]:
 
 
 def _echarts_base_opts(title: str = "") -> Dict[str, Any]:
+    # Bigger top area to avoid overlap with title/legend; more bottom for slider
     return {
-        "title": {"text": title, "left": "center", "textStyle": {"fontSize": 14}},
-        "grid": {"left": "4%", "right": "4%", "top": 40, "bottom": 40, "containLabel": True},
+        "title": {"text": title, "left": "center", "top": 6, "textStyle": {"fontSize": 14}},
+        "grid": {"left": "4%", "right": "4%", "top": 70, "bottom": 70, "containLabel": True},
         "tooltip": {"trigger": "axis"},
-        "legend": {"top": 10},
+        "legend": {"top": 34},
         "xAxis": {"type": "time", "axisLine": {"lineStyle": {"color": "#888"}}},
         "yAxis": {"type": "value", "axisLine": {"lineStyle": {"color": "#888"}}},
-        # Animations enabled
+        # Keep soft updates, but no numeric flickers
         "animation": True,
         "animationDuration": 300,
         "animationDurationUpdate": 200,
@@ -1001,11 +991,11 @@ def _echarts_base_opts(title: str = "") -> Dict[str, Any]:
         "progressive": 2000,
         "progressiveThreshold": 4000,
     }
+
 def _num_or_none(x) -> Optional[float]:
     try:
         if x is None:
             return None
-        # pandas NA friendly
         if pd.isna(x):
             return None
         v = float(x)
@@ -1045,16 +1035,14 @@ def _echarts_responsive_events() -> Dict[str, str]:
         "    if(r.width>0&&r.height>0){safe();clearInterval(iv);} if(++tries>60){clearInterval(iv);}},150);"
         "  el.__t3_hooks__=true;"
         "}"
-        "var r=el.getBoundingClientRect();"
-        "return {ev:'hooks', w:r.width||0, h:r.height||0, hidden:(r.width===0||r.height===0)};"
-        "}catch(e){return {ev:'error', msg:String(e)}}"
+        "return null;}catch(e){return null;}"
     )
     return {"rendered": js, "finished": js}
 
 
 def _st_echarts_render(options: Dict[str, Any], height_px: int, key: str):
     try:
-        evt = st_echarts(
+        st_echarts(
             options=options,
             height=f"{height_px}px",
             width="100%",
@@ -1062,10 +1050,6 @@ def _st_echarts_render(options: Dict[str, Any], height_px: int, key: str):
             key=key,
             events=_echarts_responsive_events(),
         )
-        if evt:
-            logging.getLogger("TelemetryDashboard").info(
-                f"ECharts[{key}] evt={evt}"
-            )
     except Exception as e:
         logging.getLogger("TelemetryDashboard").error(
             f"ECharts render error [{key}]: {e}"
@@ -1116,7 +1100,8 @@ def create_small_gauge_option(
         "pointer": {"length": "60%", "width": 4, "itemStyle": {"color": color}},
         "title": {"show": False},
         "detail": {
-            "valueAnimation": True,
+            # No animated number
+            "valueAnimation": False,
             "offsetCenter": [0, "60%"],
             "fontSize": 16,
             "fontWeight": "bold",
@@ -1253,8 +1238,21 @@ def render_kpi_header(kpis: Dict[str, float], unique_ns: str = "kpiheader", show
 
 
 # ---------------------------
-# Charts (ECharts)
+# Charts (ECharts) with dataZoom
 # ---------------------------
+
+def _time_zoom():
+    # Enable zoom by wheel/drag and a bottom slider (xAxis time)
+    return [
+        {"type": "inside", "xAxisIndex": [0], "filterMode": "none"},
+        {"type": "slider", "xAxisIndex": [0], "height": 24, "bottom": 18},
+    ]
+
+def _multi_time_zoom(x_axis_count: int):
+    return [
+        {"type": "inside", "xAxisIndex": list(range(x_axis_count)), "filterMode": "none"},
+        {"type": "slider", "xAxisIndex": list(range(x_axis_count)), "height": 24, "bottom": 18},
+    ]
 
 def create_speed_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     if df.empty or "speed_ms" not in df.columns:
@@ -1279,28 +1277,30 @@ def create_speed_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
                 }
             ],
             "yAxis": {"name": "m/s"},
+            "dataZoom": _time_zoom(),  # zoom enabled
         }
     )
     return opt
+
 def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"voltage_v", "current_a", "power_w"}
     if df.empty or not need.issubset(df.columns):
         return {"title": {"text": "No power data available"}, "animation": False}
 
     ts = _ts_to_iso_list(df["timestamp"])
-    volt = [ _num_or_none(v) for v in pd.to_numeric(df["voltage_v"], errors="coerce") ]
-    curr = [ _num_or_none(v) for v in pd.to_numeric(df["current_a"], errors="coerce") ]
-    pwr  = [ _num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce") ]
+    volt = [_num_or_none(v) for v in pd.to_numeric(df["voltage_v"], errors="coerce")]
+    curr = [_num_or_none(v) for v in pd.to_numeric(df["current_a"], errors="coerce")]
+    pwr = [_num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce")]
 
     src_top = [[t, v, c] for t, v, c in zip(ts, volt, curr)]
     src_bot = [[t, w] for t, w in zip(ts, pwr)]
 
     return {
-        "title": {"text": "⚡ Electrical System Performance"},
+        "title": {"text": "⚡ Electrical System Performance", "top": 6},
         "tooltip": {"trigger": "axis"},
         "grid": [
-            {"left": "6%", "right": "4%", "top": 40, "height": 180, "containLabel": True},
-            {"left": "6%", "right": "4%", "top": 260, "height": 180, "containLabel": True},
+            {"left": "6%", "right": "4%", "top": 70, "height": 180, "containLabel": True},
+            {"left": "6%", "right": "4%", "top": 300, "height": 180, "containLabel": True},
         ],
         "xAxis": [{"type": "time", "gridIndex": 0}, {"type": "time", "gridIndex": 1}],
         "yAxis": [
@@ -1344,10 +1344,10 @@ def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             },
         ],
         "axisPointer": {"link": [{"xAxisIndex": "all"}]},
-        "animation": False,
+        "animation": True,
         "useDirtyRect": True,
-    }    
-
+        "dataZoom": _multi_time_zoom(2),  # zoom for both top & bottom
+    }
 
 def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"gyro_x", "gyro_y", "gyro_z", "accel_x", "accel_y", "accel_z"}
@@ -1358,23 +1358,23 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     ts = _ts_to_iso_list(df2["timestamp"])
 
     def col(v):
-        return [ _num_or_none(x) for x in pd.to_numeric(df2[v], errors="coerce") ]
+        return [_num_or_none(x) for x in pd.to_numeric(df2[v], errors="coerce")]
 
     gx, gy, gz = col("gyro_x"), col("gyro_y"), col("gyro_z")
     ax, ay, az = col("accel_x"), col("accel_y"), col("accel_z")
     roll, pitch = col("roll_deg"), col("pitch_deg")
 
     src_gyro = [[t, a, b, c] for t, a, b, c in zip(ts, gx, gy, gz)]
-    src_acc  = [[t, a, b, c] for t, a, b, c in zip(ts, ax, ay, az)]
-    src_rp   = [[t, r, p]     for t, r, p     in zip(ts, roll, pitch)]
+    src_acc = [[t, a, b, c] for t, a, b, c in zip(ts, ax, ay, az)]
+    src_rp = [[t, r, p] for t, r, p in zip(ts, roll, pitch)]
 
     return {
-        "title": {"text": "⚡ IMU System Performance with Roll & Pitch"},
+        "title": {"text": "⚡ IMU System Performance with Roll & Pitch", "top": 6},
         "tooltip": {"trigger": "axis"},
         "grid": [
-            {"left": "6%", "right": "4%", "top": 40, "height": 160, "containLabel": True},
-            {"left": "6%", "right": "4%", "top": 230, "height": 160, "containLabel": True},
-            {"left": "6%", "right": "4%", "top": 420, "height": 160, "containLabel": True},
+            {"left": "6%", "right": "4%", "top": 70, "height": 160, "containLabel": True},
+            {"left": "6%", "right": "4%", "top": 260, "height": 160, "containLabel": True},
+            {"left": "6%", "right": "4%", "top": 450, "height": 160, "containLabel": True},
         ],
         "xAxis": [{"type": "time", "gridIndex": i} for i in range(3)],
         "yAxis": [
@@ -1387,7 +1387,7 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             {"id": "acc", "source": src_acc},
             {"id": "rp", "source": src_rp},
         ],
-        "legend": {"top": 10},
+        "legend": {"top": 34},
         "series": [
             {"type": "line", "datasetId": "gyro", "name": "Gyro X", "encode": {"x": 0, "y": 1},
              "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False, "lineStyle": {"width": 2, "color": "#e74c3c"},
@@ -1415,11 +1415,10 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
              "sampling": "lttb"},
         ],
         "axisPointer": {"link": [{"xAxisIndex": "all"}]},
-        "animation": False,
+        "animation": True,
         "useDirtyRect": True,
+        "dataZoom": _multi_time_zoom(3),  # zoom across all three xAxes
     }
-    
-
 
 def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"gyro_x", "gyro_y", "gyro_z", "accel_x", "accel_y", "accel_z"}
@@ -1436,7 +1435,6 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     ax, ay, az = col("accel_x"), col("accel_y"), col("accel_z")
     roll, pitch = col("roll_deg"), col("pitch_deg")
 
-    # nine grids: 3x3
     grids = []
     x_axes = []
     y_axes = []
@@ -1454,21 +1452,11 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         "🎯 R&P Combined",
     ]
 
-    top_offsets = [40, 260, 480]
+    top_offsets = [70, 290, 510]
     left_offsets = ["6%", "36%", "66%"]
     height = 180
 
-    col_map = {
-        0: 1,  # Gyro X
-        1: 2,  # Gyro Y
-        2: 3,  # Gyro Z
-        3: 4,  # Accel X
-        4: 5,  # Accel Y
-        5: 6,  # Accel Z
-        6: 7,  # Roll
-        7: 8,  # Pitch
-        8: None,  # combined
-    }
+    col_map = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: None}
 
     grid_idx = 0
     for r in range(3):
@@ -1524,21 +1512,14 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
                     "lineStyle": {
                         "width": 2,
                         "color": (
-                            "#e74c3c"
-                            if i == 0
-                            else "#2ecc71"
-                            if i == 1
-                            else "#3498db"
-                            if i == 2
-                            else "#f39c12"
-                            if i == 3
-                            else "#9b59b6"
-                            if i == 4
-                            else "#34495e"
-                            if i == 5
-                            else "#e377c2"
-                            if i == 6
-                            else "#17becf"
+                            "#e74c3c" if i == 0 else
+                            "#2ecc71" if i == 1 else
+                            "#3498db" if i == 2 else
+                            "#f39c12" if i == 3 else
+                            "#9b59b6" if i == 4 else
+                            "#34495e" if i == 5 else
+                            "#e377c2" if i == 6 else
+                            "#17becf"
                         ),
                     },
                     "sampling": "lttb",
@@ -1551,7 +1532,7 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     ]
 
     opt = {
-        "title": {"text": "🎮 Detailed IMU Sensor Analysis with Roll & Pitch"},
+        "title": {"text": "🎮 Detailed IMU Sensor Analysis with Roll & Pitch", "top": 6},
         "tooltip": {"trigger": "axis"},
         "dataset": {"source": dataset_source},
         "grid": grids,
@@ -1559,11 +1540,12 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         "yAxis": y_axes,
         "series": series,
         "axisPointer": {"link": [{"xAxisIndex": "all"}]},
-        "animation": False,
+        "animation": True,
         "useDirtyRect": True,
         "progressive": 2000,
         "progressiveThreshold": 4000,
-        "legend": {"top": 10},
+        "legend": {"top": 34},
+        "dataZoom": _multi_time_zoom(9),
     }
     return opt
 
@@ -1573,10 +1555,12 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     if df.empty or not need.issubset(df.columns):
         return {"title": {"text": "No efficiency data available"}, "animation": False}
 
-    spd = [ _num_or_none(v) for v in pd.to_numeric(df["speed_ms"], errors="coerce") ]
-    pwr = [ _num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce") ]
+    opt = _echarts_base_opts("⚡ Efficiency Analysis: Speed vs Power Consumption")
+
+    spd = [_num_or_none(v) for v in pd.to_numeric(df["speed_ms"], errors="coerce")]
+    pwr = [_num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce")]
     volt_raw = pd.to_numeric(df.get("voltage_v", pd.Series([None] * len(df))), errors="coerce")
-    volt = [ _num_or_none(v) for v in volt_raw ]
+    volt = [_num_or_none(v) for v in volt_raw]
 
     src = [[spd[i], pwr[i], volt[i]] for i in range(len(spd))]
     v_non_none = [v for v in volt if v is not None]
@@ -1584,8 +1568,7 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     vmin = min(v_non_none) if vm_show else 0
     vmax = max(v_non_none) if vm_show else 1
 
-    return {
-        "title": {"text": "⚡ Efficiency Analysis: Speed vs Power Consumption"},
+    opt.update({
         "tooltip": {
             "trigger": "item",
             "formatter": JsCode(
@@ -1594,7 +1577,6 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
                 "(p.value[2]==null ? '' : '<br/>Voltage: ' + p.value[2].toFixed(1) + ' V');}"
             ).js_code,
         },
-        "grid": {"left": "6%", "right": "6%", "top": 50, "bottom": 40, "containLabel": True},
         "xAxis": {"type": "value", "name": "Speed (m/s)"},
         "yAxis": {"type": "value", "name": "Power (W)"},
         "visualMap": {
@@ -1602,7 +1584,7 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             "min": vmin,
             "max": vmax,
             "dimension": 2,
-            "inRange": {"color": ["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"]},
+            "inRange": {"color": ["#444", "#666", "#888", "#aaa", "#ccc"]},  # greyscale
             "right": 5,
             "top": "middle",
             "calculable": True,
@@ -1610,14 +1592,19 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         },
         "series": [{"type": "scatter", "symbolSize": 6, "encode": {"x": 0, "y": 1}, "itemStyle": {"opacity": 0.8}}],
         "dataset": {"source": src},
-        "animation": False,
-        "useDirtyRect": True,
-    }
+        "animation": True,
+        "dataZoom": [
+            {"type": "inside", "xAxisIndex": [0], "yAxisIndex": [0], "filterMode": "none"},
+            {"type": "slider", "xAxisIndex": [0], "height": 24, "bottom": 18},
+            {"type": "slider", "yAxisIndex": [0], "width": 16, "right": 6},
+        ],
+    })
+    return opt
 
 
 def create_gps_map_with_altitude_option(df: pd.DataFrame) -> Dict[str, Any]:
     if df is None or df.empty:
-        return {"title": {"text": "No GPS data available"}, "animation": False}
+        return {"title": {"text": "No GPS data available"}, "animation": True}
 
     def _find_col(df: pd.DataFrame, candidates: List[str]) -> Optional[str]:
         cols = list(df.columns)
@@ -1701,10 +1688,10 @@ def create_gps_map_with_altitude_option(df: pd.DataFrame) -> Dict[str, Any]:
     ).js_code
 
     opt = {
-        "title": {"text": "🛰️ GPS Tracking and Altitude Analysis"},
+        "title": {"text": "🛰️ GPS Tracking and Altitude Analysis", "top": 6},
         "grid": [
-            {"left": "6%", "right": "40%", "top": 50, "height": 420, "containLabel": True},
-            {"left": "64%", "right": "6%", "top": 50, "height": 420, "containLabel": True},
+            {"left": "6%", "right": "40%", "top": 70, "height": 420, "containLabel": True},
+            {"left": "64%", "right": "6%", "top": 70, "height": 420, "containLabel": True},
         ],
         "xAxis": [
             {"type": "value", "gridIndex": 0, "name": "Longitude"},
@@ -1755,10 +1742,11 @@ def create_gps_map_with_altitude_option(df: pd.DataFrame) -> Dict[str, Any]:
                 "sampling": "lttb",
             },
         ],
-        "animation": False,
+        "animation": True,
         "useDirtyRect": True,
         "progressive": 2000,
         "progressiveThreshold": 4000,
+        "dataZoom": _multi_time_zoom(2),
     }
     return opt
 
@@ -1795,7 +1783,7 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
         return {
             "title": {"text": "🔥 Correlation Heatmap"},
             "tooltip": {"position": "top"},
-            "grid": {"left": "8%", "right": "8%", "top": 50, "bottom": 40, "containLabel": True},
+            "grid": {"left": "8%", "right": "8%", "top": 70, "bottom": 60, "containLabel": True},
             "xAxis": {"type": "category", "data": xcats, "splitArea": {"show": True}, "axisLabel": {"rotate": 40}},
             "yAxis": {"type": "category", "data": ycats, "splitArea": {"show": True}},
             "visualMap": {
@@ -1805,17 +1793,10 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
                 "orient": "horizontal",
                 "left": "center",
                 "bottom": 0,
-                "inRange": {"color": ["#67001f", "#f7f7f7", "#053061"]},
+                "inRange": {"color": ["#444", "#eee", "#222"]},
             },
-            "series": [
-                {
-                    "name": "corr",
-                    "type": "heatmap",
-                    "data": data,
-                    "label": {"show": False},
-                }
-            ],
-            "animation": False,
+            "series": [{"name": "corr", "type": "heatmap", "data": data, "label": {"show": False}}],
+            "animation": True,
             "useDirtyRect": True,
         }
 
@@ -1838,7 +1819,7 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
             "xAxis": {"type": "value", "name": y_col},
             "yAxis": {"type": "value", "name": "Count"},
             "series": [{"type": "bar", "data": src, "barWidth": "70%"}],
-            "animation": False,
+            "animation": True,
             "useDirtyRect": True,
         }
 
@@ -1865,13 +1846,14 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
     return {
         "title": {"text": title},
         "tooltip": {"trigger": "axis" if chart_type in ("line", "bar") else "item"},
-        "grid": {"left": "6%", "right": "6%", "top": 50, "bottom": 40, "containLabel": True},
+        "grid": {"left": "6%", "right": "6%", "top": 70, "bottom": 70, "containLabel": True},
         "xAxis": x_axis,
         "yAxis": y_axis,
         "dataset": {"source": src},
         "series": [series_def],
-        "animation": False,
+        "animation": True,
         "useDirtyRect": True,
+        "dataZoom": _time_zoom() if x_is_time else None,
     }
 
 
@@ -2156,7 +2138,7 @@ def main():
         unsafe_allow_html=True,
     )
 
-    # Optional: one-time splash to stabilize the first render
+    # One-time splash to stabilize the first render
     if st.session_state.get("_first_load", True):
         with st.spinner("Preparing charts and layout..."):
             time.sleep(0.6)
@@ -2413,7 +2395,7 @@ def main():
     kpis = calculate_kpis(df)
 
     # ---------------------------
-    # Navigation (instead of st.tabs)
+    # Navigation (segmented radio)
     # ---------------------------
     TAB_NAMES = [
         "📊 Overview",
@@ -2438,10 +2420,9 @@ def main():
         key="active_tab_radio",
     )
     st.session_state.active_tab = active
-    logging.getLogger("TelemetryDashboard").info(f"[Panel] Active: {active}")
 
     # ---------------------------
-    # Render selected panel
+    # Render selected panel (ensures visible init)
     # ---------------------------
     if active == "📊 Overview":
         render_overview_tab(kpis)
@@ -2451,7 +2432,7 @@ def main():
         render_kpi_header(kpis, unique_ns="speedtab", show_gauges=False)
         opt = create_speed_chart_option(df)
         st.markdown('<div class="chart-wrap">', unsafe_allow_html=True)
-        _st_echarts_render(opt, 400, key="chart_speed_main")
+        _st_echarts_render(opt, 420, key="chart_speed_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
     elif active == "⚡ Power":
@@ -2459,7 +2440,7 @@ def main():
         render_kpi_header(kpis, unique_ns="powertab", show_gauges=False)
         opt = create_power_chart_option(df)
         st.markdown('<div class="chart-wrap">', unsafe_allow_html=True)
-        _st_echarts_render(opt, 480, key="chart_power_main")
+        _st_echarts_render(opt, 500, key="chart_power_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
     elif active == "🎮 IMU":
@@ -2467,7 +2448,7 @@ def main():
         render_kpi_header(kpis, unique_ns="imutab", show_gauges=False)
         opt = create_imu_chart_option(df)
         st.markdown('<div class="chart-wrap">', unsafe_allow_html=True)
-        _st_echarts_render(opt, 600, key="chart_imu_main")
+        _st_echarts_render(opt, 640, key="chart_imu_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
     elif active == "🎮 IMU Detail":
@@ -2475,7 +2456,7 @@ def main():
         render_kpi_header(kpis, unique_ns="imudetailtab", show_gauges=False)
         opt = create_imu_detail_chart_option(df)
         st.markdown('<div class="chart-wrap">', unsafe_allow_html=True)
-        _st_echarts_render(opt, 700, key="chart_imu_detail_main")
+        _st_echarts_render(opt, 760, key="chart_imu_detail_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
     elif active == "⚡ Efficiency":
@@ -2483,7 +2464,7 @@ def main():
         render_kpi_header(kpis, unique_ns="efftab", show_gauges=False)
         opt = create_efficiency_chart_option(df)
         st.markdown('<div class="chart-wrap">', unsafe_allow_html=True)
-        _st_echarts_render(opt, 420, key="chart_efficiency_main")
+        _st_echarts_render(opt, 460, key="chart_efficiency_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
     elif active == "🛰️ GPS":
@@ -2491,7 +2472,7 @@ def main():
         render_kpi_header(kpis, unique_ns="gpstab", show_gauges=False)
         opt = create_gps_map_with_altitude_option(df)
         st.markdown('<div class="chart-wrap">', unsafe_allow_html=True)
-        _st_echarts_render(opt, 520, key="chart_gps_main")
+        _st_echarts_render(opt, 560, key="chart_gps_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
     elif active == "📈 Custom":
