@@ -314,6 +314,16 @@ def setup_terminal_logging():
 setup_terminal_logging()
 
 
+
+def first_load_splash():
+    if st.session_state.get("_first_load", True):
+        with st.spinner("Preparing charts and layout..."):
+            # Short delay to let Streamlit layout stabilize
+            time.sleep(0.6)
+        st.session_state["_first_load"] = False
+        st.rerun()
+
+
 class EnhancedTelemetryManager:
     """Telemetry manager with multi-source data integration and pagination support."""
 
@@ -2146,6 +2156,13 @@ def main():
         unsafe_allow_html=True,
     )
 
+    # Optional: one-time splash to stabilize the first render
+    if st.session_state.get("_first_load", True):
+        with st.spinner("Preparing charts and layout..."):
+            time.sleep(0.6)
+        st.session_state["_first_load"] = False
+        st.rerun()
+
     if not ECHARTS_AVAILABLE or not PYECHARTS_AVAILABLE:
         st.error("ECharts/JsCode component missing. Install: pip install streamlit-echarts pyecharts")
         return
@@ -2380,53 +2397,6 @@ def main():
     if df.empty:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.warning("⏳ Waiting for telemetry data...")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.session_state.data_source_mode == "realtime_session":
-                st.info(
-                    "**Getting Started (Real-time):**\n"
-                    "1. Ensure the bridge (your data sending script) is running\n"
-                    "2. Click 'Connect' in the sidebar to start receiving data\n"
-                    "3. Large sessions are automatically paginated for optimal performance"
-                )
-            else:
-                st.info(
-                    "**Getting Started (Historical):**\n"
-                    "1. Click 'Refresh Sessions' in the sidebar to load available sessions\n"
-                    "2. Select a session and its data will load automatically\n"
-                    "3. Large datasets use pagination to load all data points"
-                )
-        with col2:
-            with st.expander("🔍 Debug Information"):
-                debug_info = {
-                    "Data Source Mode": st.session_state.data_source_mode,
-                    "Is Viewing Historical": st.session_state.is_viewing_historical,
-                    "Selected Session ID": st.session_state.selected_session["session_id"][:8] + "..."
-                    if st.session_state.selected_session
-                    else None,
-                    "Current Real-time Session ID": st.session_state.current_session_id,
-                    "Number of Historical Sessions": len(st.session_state.historical_sessions),
-                    "Telemetry Data Points (in memory)": len(st.session_state.telemetry_data),
-                    "Max Datapoints Per Session": MAX_DATAPOINTS_PER_SESSION,
-                    "Max Rows Per Request": SUPABASE_MAX_ROWS_PER_REQUEST,
-                }
-
-                if st.session_state.telemetry_manager:
-                    stats = st.session_state.telemetry_manager.get_stats()
-                    debug_info.update(
-                        {
-                            "Ably Connected (Manager Status)": st.session_state.telemetry_manager.is_connected,
-                            "Messages Received (via Ably)": stats["messages_received"],
-                            "Connection Errors": stats["errors"],
-                            "Total Pagination Requests": stats["pagination_stats"]["total_requests"],
-                            "Total Rows Fetched": stats["pagination_stats"]["total_rows_fetched"],
-                            "Sessions Requiring Pagination": stats["pagination_stats"]["sessions_paginated"],
-                            "Largest Session Size": stats["pagination_stats"]["largest_session_size"],
-                        }
-                    )
-
-                st.json(debug_info)
         st.markdown("</div>", unsafe_allow_html=True)
         return
 
@@ -2440,33 +2410,12 @@ def main():
             else:
                 st.warning(msg, icon="⚠️")
 
-    with st.container():
-        col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
-        with col1:
-            st.info("📚 Historical" if st.session_state.is_viewing_historical else "🔴 Real-time")
-        with col2:
-            st.info(f"📊 {len(df):,} data points available")
-        with col3:
-            st.info(f"⏰ Last update: {st.session_state.last_update.strftime('%H:%M:%S')}")
-        with col4:
-            if st.session_state.data_source_mode == "realtime_session" and new_messages_count > 0:
-                st.success(f"📨 +{new_messages_count}")
-
-    if len(df) > 10000:
-        st.markdown(
-            f"""
-        <div class="pagination-info">
-            <strong>📊 Large Dataset Loaded:</strong> {len(df):,} data points successfully retrieved using pagination
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
-
     kpis = calculate_kpis(df)
 
-    st.subheader("📈 Dashboard")
-
-    tab_names = [
+    # ---------------------------
+    # Navigation (instead of st.tabs)
+    # ---------------------------
+    TAB_NAMES = [
         "📊 Overview",
         "🚗 Speed",
         "⚡ Power",
@@ -2477,12 +2426,27 @@ def main():
         "📈 Custom",
         "📃 Data",
     ]
-    tabs = st.tabs(tab_names)
 
-    with tabs[0]:
+    if "active_tab" not in st.session_state:
+        st.session_state.active_tab = TAB_NAMES[0]
+
+    active = st.radio(
+        "Sections",
+        options=TAB_NAMES,
+        index=TAB_NAMES.index(st.session_state.active_tab),
+        horizontal=True,
+        key="active_tab_radio",
+    )
+    st.session_state.active_tab = active
+    logging.getLogger("TelemetryDashboard").info(f"[Panel] Active: {active}")
+
+    # ---------------------------
+    # Render selected panel
+    # ---------------------------
+    if active == "📊 Overview":
         render_overview_tab(kpis)
 
-    with tabs[1]:
+    elif active == "🚗 Speed":
         render_live_gauges(kpis, unique_ns="speedtab")
         render_kpi_header(kpis, unique_ns="speedtab", show_gauges=False)
         opt = create_speed_chart_option(df)
@@ -2490,7 +2454,7 @@ def main():
         _st_echarts_render(opt, 400, key="chart_speed_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with tabs[2]:
+    elif active == "⚡ Power":
         render_live_gauges(kpis, unique_ns="powertab")
         render_kpi_header(kpis, unique_ns="powertab", show_gauges=False)
         opt = create_power_chart_option(df)
@@ -2498,7 +2462,7 @@ def main():
         _st_echarts_render(opt, 480, key="chart_power_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with tabs[3]:
+    elif active == "🎮 IMU":
         render_live_gauges(kpis, unique_ns="imutab")
         render_kpi_header(kpis, unique_ns="imutab", show_gauges=False)
         opt = create_imu_chart_option(df)
@@ -2506,7 +2470,7 @@ def main():
         _st_echarts_render(opt, 600, key="chart_imu_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with tabs[4]:
+    elif active == "🎮 IMU Detail":
         render_live_gauges(kpis, unique_ns="imudetailtab")
         render_kpi_header(kpis, unique_ns="imudetailtab", show_gauges=False)
         opt = create_imu_detail_chart_option(df)
@@ -2514,7 +2478,7 @@ def main():
         _st_echarts_render(opt, 700, key="chart_imu_detail_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with tabs[5]:
+    elif active == "⚡ Efficiency":
         render_live_gauges(kpis, unique_ns="efftab")
         render_kpi_header(kpis, unique_ns="efftab", show_gauges=False)
         opt = create_efficiency_chart_option(df)
@@ -2522,7 +2486,7 @@ def main():
         _st_echarts_render(opt, 420, key="chart_efficiency_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with tabs[6]:
+    elif active == "🛰️ GPS":
         render_live_gauges(kpis, unique_ns="gpstab")
         render_kpi_header(kpis, unique_ns="gpstab", show_gauges=False)
         opt = create_gps_map_with_altitude_option(df)
@@ -2530,21 +2494,19 @@ def main():
         _st_echarts_render(opt, 520, key="chart_gps_main")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with tabs[7]:
+    elif active == "📈 Custom":
         render_live_gauges(kpis, unique_ns="customtab")
         render_kpi_header(kpis, unique_ns="customtab", show_gauges=False)
         render_dynamic_charts_section(df)
 
-    with tabs[8]:
+    elif active == "📃 Data":
         render_live_gauges(kpis, unique_ns="datatabletab")
         render_kpi_header(kpis, unique_ns="datatabletab", show_gauges=False)
-
         st.subheader("📃 Raw Telemetry Data")
         if len(df) > 1000:
             st.info(f"ℹ️ Showing last 100 from all {len(df):,} data points below.")
         else:
             st.info(f"ℹ️ Showing last 100 from all {len(df):,} data points below.")
-
         display_df = df.tail(100) if len(df) > 100 else df
         st.dataframe(display_df, use_container_width=True, height=400)
 
@@ -2558,52 +2520,18 @@ def main():
                 mime="text/csv",
                 use_container_width=True,
             )
-
         with col2:
             if len(df) > 1000:
                 sample_df = df.sample(n=min(1000, len(df)), random_state=42)
-                sample_csv = sample_df.to_csv(index=False)
                 st.download_button(
                     label="📥 Download Sample CSV (1000 rows)",
-                    data=sample_csv,
+                    data=sample_df.to_csv(index=False),
                     file_name=f"telemetry_sample_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                     mime="text/csv",
                     use_container_width=True,
                 )
 
-        with st.expander("📊 Dataset Statistics"):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Total Rows", f"{len(df):,}")
-                st.metric("Columns", len(df.columns))
-                if "roll_deg" in calculate_roll_and_pitch(df).columns:
-                    st.metric("Roll & Pitch", "✅ Calculated")
-            with col2:
-                if "timestamp" in df.columns and len(df) > 1:
-                    try:
-                        timestamp_series = pd.to_datetime(df["timestamp"], errors="coerce", utc=True)
-                        timestamp_series = timestamp_series.dropna()
-                        if len(timestamp_series) > 1:
-                            time_span = (timestamp_series.max() - timestamp_series.min())
-                            st.metric("Time Span", str(time_span).split(".")[0])
-                            if time_span.total_seconds() > 0:
-                                data_rate = len(df) / time_span.total_seconds()
-                                st.metric("Data Rate", f"{data_rate:.2f} Hz")
-                        else:
-                            st.metric("Time Span", "N/A")
-                            st.metric("Data Rate", "N/A")
-                    except Exception:
-                        st.metric("Time Span", "Error")
-                        st.metric("Data Rate", "Error")
-            with col3:
-                memory_usage = df.memory_usage(deep=True).sum() / 1024 / 1024
-                st.metric("Memory Usage", f"{memory_usage:.2f} MB")
-                if "data_source" in df.columns:
-                    source_counts = df["data_source"].value_counts()
-                    st.write("**Data Sources:**")
-                    for source, count in source_counts.items():
-                        st.write(f"• {source}: {count:,} rows")
-
+    # Auto-refresh
     if (st.session_state.data_source_mode == "realtime_session" and st.session_state.auto_refresh):
         if AUTOREFRESH_AVAILABLE:
             st_autorefresh(
@@ -2622,8 +2550,9 @@ def main():
         "<p>Shell Eco-marathon Telemetry Dashboard</p>"
         "</div>",
         unsafe_allow_html=True,
+        
+    first_load_splash()
     )
-
 
 if __name__ == "__main__":
     main()
