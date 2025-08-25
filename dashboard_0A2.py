@@ -284,6 +284,14 @@ div[data-baseweb="input"] > div { background: var(--glass); border-radius:10px; 
 
 /* Focus ring */
 *:focus-visible { outline: 2px solid color-mix(in oklab, hsl(var(--brand-1)) 55%, var(--text)); outline-offset:2px; border-radius:4px; }
+/* --- streamlit-echarts reliability in tabs ---
+   In tabs, the inner iframe can collapse to 0px; force a sane min-height
+   so ECharts has a non-zero box to initialize against. */
+iframe[title="streamlit_echarts.st_echarts"] {
+  min-height: 160px !important;
+  width: 100% !important;
+  display: block !important;
+}
 </style>
 """
 
@@ -973,7 +981,12 @@ def _echarts_base_opts(title: str = "") -> Dict[str, Any]:
         "legend": {"top": 10},
         "xAxis": {"type": "time", "axisLine": {"lineStyle": {"color": "#888"}}},
         "yAxis": {"type": "value", "axisLine": {"lineStyle": {"color": "#888"}}},
-        "animation": False,
+        # Animations enabled
+        "animation": True,
+        "animationDuration": 300,
+        "animationDurationUpdate": 200,
+        "animationEasing": "cubicOut",
+        "animationEasingUpdate": "cubicOut",
         "useDirtyRect": True,
         "progressive": 2000,
         "progressiveThreshold": 4000,
@@ -995,74 +1008,53 @@ def _num_or_none(x) -> Optional[float]:
 
 # Responsive event hook for ECharts to survive hidden tabs / container resizes
 def _echarts_responsive_events() -> Dict[str, str]:
-    # Install robust resize hooks once per chart DOM.
-    # - Attach on both 'rendered' and 'finished' to handle no-animation / hidden init cases
-    # - Add ResizeObserver + window resize
-    # - Add MutationObserver on Streamlit tabs to trigger resize on tab switch
-    # - Poll briefly until container gets non-zero size
     js = (
-        "function(){"
-        "  try{"
-        "    var chart=this;"
-        "    var el=chart.getDom();"
-        "    if(!el.__echarts_hooks_installed__){"
-        "      function safe(){try{chart.resize();}catch(e){}}"
-        "      // Window resize"
-        "      window.addEventListener('resize', safe, {passive:true});"
-        "      // ResizeObserver up the DOM tree"
-        "      if(typeof ResizeObserver!=='undefined'){"
-        "        var ro=new ResizeObserver(function(){safe();});"
-        "        try{ro.observe(el);}catch(e){}"
-        "        var p=el.parentElement;var n=0;"
-        "        while(p&&n<5){try{ro.observe(p);}catch(e){} p=p.parentElement;n++;}"
-        "      }"
-        "      // Observe Streamlit's tab selection changes"
-        "      if(typeof MutationObserver!=='undefined'){"
-        "        var tablist=document.querySelector('[data-baseweb=\"tab-list\"]');"
-        "        if(tablist){"
-        "          var mo=new MutationObserver(function(muts){setTimeout(safe,80);});"
-        "          try{mo.observe(tablist,{attributes:true,subtree:true,attributeFilter:['aria-selected']});}catch(e){}"
-        "        }"
-        "      }"
-        "      // Also bind click on tabs as a fallback"
-        "      var tabs=document.querySelectorAll('[data-baseweb=\"tab\"]');"
-        "      tabs&&tabs.forEach(function(t){t.addEventListener('click', function(){setTimeout(safe,80);}, {passive:true});});"
-        "      // Visibility changes (e.g. switching windows)"
-        "      document.addEventListener('visibilitychange',function(){setTimeout(safe,80);});"
-        "      // Short polling until element gets a size"
-        "      var tries=0;var iv=setInterval(function(){"
-        "        var r=el.getBoundingClientRect();"
-        "        if(r.width>0&&r.height>0){safe();clearInterval(iv);} "
-        "        if(++tries>50){clearInterval(iv);}"
-        "      },160);"
-        "      el.__echarts_hooks_installed__=true;"
-        "    }"
-        "    var r=el.getBoundingClientRect();"
-        "    return {ev:'hooks', w:r.width||0, h:r.height||0, hidden:(r.width===0||r.height===0)};"
-        "  }catch(e){"
-        "    console.error(e);"
-        "    return {ev:'error', msg:String(e)};"
+        "function(){try{var chart=this;var el=chart.getDom();"
+        "function safe(){try{chart.resize();}catch(e){}}"
+        "if(!el.__t3_hooks__){"
+        "  window.addEventListener('resize', safe, {passive:true});"
+        "  if(typeof ResizeObserver!=='undefined'){"
+        "    var ro=new ResizeObserver(function(){safe()});"
+        "    try{ro.observe(el);}catch(e){}"
+        "    var p=el.parentElement;var n=0;"
+        "    while(p&&n<6){try{ro.observe(p);}catch(e){} p=p.parentElement;n++;}"
         "  }"
+        "  if(typeof IntersectionObserver!=='undefined'){"
+        "    try{var io=new IntersectionObserver(function(es){"
+        "      for(var i=0;i<es.length;i++){if(es[i].isIntersecting){setTimeout(safe,60);setTimeout(safe,180);}}"
+        "    },{root:null,threshold:0}); io.observe(el);}catch(e){}"
+        "  }"
+        "  if(typeof MutationObserver!=='undefined'){"
+        "    try{var tablist=document.querySelector('[data-baseweb=\"tab-list\"]');"
+        "    if(tablist){var mo=new MutationObserver(function(){setTimeout(safe,60);setTimeout(safe,180);});"
+        "      mo.observe(tablist,{attributes:true,subtree:true,attributeFilter:['aria-selected','aria-hidden','style']});}"
+        "    }catch(e){}"
+        "  }"
+        "  document.addEventListener('visibilitychange', function(){setTimeout(safe,60)});"
+        "  var tries=0; var iv=setInterval(function(){var r=el.getBoundingClientRect();"
+        "    if(r.width>0&&r.height>0){safe();clearInterval(iv);} if(++tries>60){clearInterval(iv);}},150);"
+        "  el.__t3_hooks__=true;"
         "}"
+        "var r=el.getBoundingClientRect();"
+        "return {ev:'hooks', w:r.width||0, h:r.height||0, hidden:(r.width===0||r.height===0)};"
+        "}catch(e){return {ev:'error', msg:String(e)}}"
     )
-    # Install on both events to maximize chances of executing
     return {"rendered": js, "finished": js}
 
 
 def _st_echarts_render(options: Dict[str, Any], height_px: int, key: str):
-    # Always pass responsive events so charts resize when tabs become visible
     try:
         evt = st_echarts(
             options=options,
             height=f"{height_px}px",
+            width="100%",
             renderer="canvas",
             key=key,
             events=_echarts_responsive_events(),
         )
-        # Log event payloads (width/height/hidden) for debugging
         if evt:
             logging.getLogger("TelemetryDashboard").info(
-                f"ECharts[{key}] event: {evt}"
+                f"ECharts[{key}] evt={evt}"
             )
     except Exception as e:
         logging.getLogger("TelemetryDashboard").error(
@@ -1087,12 +1079,9 @@ def create_small_gauge_option(
 
     v = float(value or 0.0)
     mx = float(max_val)
-    thr = float(thresh_val) if thresh_val is not None else None
 
     r, g, b = _rgb_tuple(color_hex)
     color = f"rgb({r},{g},{b})"
-
-    detail_suffix = suffix or ""
 
     main_series = {
         "type": "gauge",
@@ -1117,63 +1106,24 @@ def create_small_gauge_option(
         "pointer": {"length": "60%", "width": 4, "itemStyle": {"color": color}},
         "title": {"show": False},
         "detail": {
-            "valueAnimation": False,
+            "valueAnimation": True,
             "offsetCenter": [0, "60%"],
             "fontSize": 16,
             "fontWeight": "bold",
-            "formatter": JsCode(
-                f"function(v){{return Number(v).toFixed(1) + ' {detail_suffix}';}}"
-            ).js_code,
+            "formatter": JsCode("function(v){return Number(v).toFixed(1);}").js_code,
             "color": "#333",
         },
         "data": [{"value": v, "name": title}],
     }
 
-    series = [main_series]
-
-    if thr is not None:
-        series.append(
-            {
-                "type": "gauge",
-                "min": 0,
-                "max": mx,
-                "startAngle": 220,
-                "endAngle": -40,
-                "progress": {"show": False},
-                "axisLine": {"show": False},
-                "axisTick": {"show": False},
-                "splitLine": {"show": False},
-                "axisLabel": {"show": False},
-                "pointer": {
-                    "show": True,
-                    "length": "60%",
-                    "width": 3,
-                    "itemStyle": {"color": "rgba(220,53,69,0.9)"},
-                },
-                "anchor": {"show": False},
-                "title": {"show": False},
-                "detail": {"show": False},
-                "data": [{"value": thr}],
-                "silent": True,
-                "z": 10,
-            }
-        )
-
-    title_str = title
-    if avg_ref is not None and avg_ref > 0:
-        delta = v - float(avg_ref)
-        sgn = "+" if delta >= 0 else "−"
-        title_str = f"{title}  ({sgn}{abs(delta):.1f}{detail_suffix})"
-
     option = {
-        "title": {"text": title_str, "left": "center", "top": 0, "textStyle": {"fontSize": 12}},
+        "title": {"text": title, "left": "center", "top": 0, "textStyle": {"fontSize": 12}},
         "tooltip": {"show": False},
-        "series": series,
-        "animation": False,
+        "series": [main_series],
+        "animation": True,
         "useDirtyRect": True,
     }
     return option
-
 
 def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
     st.markdown("##### 📊 Live Performance Gauges")
