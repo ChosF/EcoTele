@@ -100,7 +100,7 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------
-# Liquid Glass-Inspired UI (translucent frosted design)
+# UI 
 # -------------------------------------------------------
 def get_theme_aware_css():
     # Subtle inline SVG noise texture (very light)
