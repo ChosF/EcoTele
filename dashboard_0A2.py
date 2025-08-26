@@ -105,142 +105,228 @@ st.set_page_config(
 def get_theme_aware_css():
     return """
 <style>
+/* =========================
+   Apple "Liquid Glass" Theme
+   ========================= */
 :root {
   color-scheme: light dark;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+               Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji",
+               "Segoe UI Symbol", "Noto Color Emoji";
 
-  /* Neutral base palette for glass & gradients */
+  /* Color tokens (adaptive to Canvas/CanvasText) */
   --bg: Canvas;
   --text: CanvasText;
-  --text-muted: color-mix(in oklab, CanvasText 55%, Canvas);
-  --text-subtle: color-mix(in oklab, CanvasText 40%, Canvas);
+  --text-muted: color-mix(in oklab, CanvasText 60%, Canvas);
+  --text-subtle: color-mix(in oklab, CanvasText 45%, Canvas);
 
-  --border-weak: color-mix(in oklab, CanvasText 8%, Canvas);
-  --border: color-mix(in oklab, CanvasText 14%, Canvas);
-  --border-strong: color-mix(in oklab, CanvasText 26%, Canvas);
+  /* Hairline borders */
+  --hairline: color-mix(in oklab, CanvasText 22%, transparent);
+  --hairline-strong: color-mix(in oklab, CanvasText 28%, transparent);
 
-  --glass: color-mix(in oklab, Canvas 65%, transparent);
-  --glass-strong: color-mix(in oklab, Canvas 55%, transparent);
-  --glass-border: color-mix(in oklab, CanvasText 24%, transparent);
+  /* Glass tints + layers */
+  --glass-tint: color-mix(in oklab, CanvasText 12%, transparent);
+  --glass-tint-strong: color-mix(in oklab, CanvasText 18%, transparent);
+  --glass-bg: color-mix(in oklab, Canvas 78%, transparent);
+  --glass-bg-strong: color-mix(in oklab, Canvas 68%, transparent);
 
-  --ok: color-mix(in oklab, #43a047 70%, CanvasText);
+  /* Blur, radii, shadows */
+  --blur-1: 14px;
+  --blur-2: 22px;
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --shadow-1: 0 10px 24px color-mix(in oklab, CanvasText 14%, transparent);
+  --shadow-2: 0 18px 42px color-mix(in oklab, CanvasText 18%, transparent);
 
-  --shadow-1: 0 6px 20px color-mix(in oklab, CanvasText 10%, transparent);
-  --shadow-2: 0 14px 35px color-mix(in oklab, CanvasText 14%, transparent);
+  /* Accents */
+  --ok: color-mix(in oklab, #2ecc71 70%, CanvasText);
+  --warn: color-mix(in oklab, #f39c12 70%, CanvasText);
+  --danger: color-mix(in oklab, #e74c3c 70%, CanvasText);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --glass: color-mix(in oklab, Canvas 58%, transparent);
-    --glass-strong: color-mix(in oklab, Canvas 48%, transparent);
-    --shadow-1: 0 8px 26px rgba(0,0,0,0.35);
-    --shadow-2: 0 18px 42px rgba(0,0,0,0.45);
+    --glass-bg: color-mix(in oklab, Canvas 64%, transparent);
+    --glass-bg-strong: color-mix(in oklab, Canvas 56%, transparent);
+    --shadow-1: 0 10px 24px rgba(0,0,0,.35);
+    --shadow-2: 0 22px 48px rgba(0,0,0,.45);
   }
 }
 
-/* Frosted, matte, grayscale background */
-[data-testid="stAppViewContainer"] {
-  background:
-    radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, CanvasText 10%, transparent), transparent 60%),
-    radial-gradient(1300px 700px at 110% 110%, color-mix(in oklab, CanvasText 8%, transparent), transparent 60%),
-    radial-gradient(900px 520px at 50% 50%, color-mix(in oklab, CanvasText 6%, transparent), transparent 65%),
-    linear-gradient(180deg, color-mix(in oklab, CanvasText 6%, var(--bg)) 0%, var(--bg) 60%);
-  background-attachment: fixed;
+html, body {
+  font-family: var(--font-sans);
+  color: var(--text);
 }
 
+/* Background with parallaxable layers + subtle chroma + noise */
+[data-testid="stAppViewContainer"] {
+  background:
+    radial-gradient(1200px 600px at 8% -10%,
+      color-mix(in oklab, CanvasText 9%, transparent), transparent 60%),
+    radial-gradient(1150px 700px at 110% 110%,
+      color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
+    radial-gradient(900px 520px at 50% 50%,
+      color-mix(in oklab, CanvasText 5%, transparent), transparent 65%),
+    linear-gradient(180deg,
+      color-mix(in oklab, CanvasText 5%, var(--bg)) 0%,
+      var(--bg) 60%);
+  background-attachment: fixed;
+  will-change: background-position;
+}
+
+/* Noise overlay (very subtle) */
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none;
+  background-image:
+    url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAI0lEQVQoU2NkgAJGxLYxYGBg+P//PyYwGJQwGJQmCwYAAHWbC2cSP2vRAAAAAElFTkSuQmCC');
+  opacity: .06;
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+
+/* Header glass */
 [data-testid="stHeader"] {
   background:
     linear-gradient(90deg,
       color-mix(in oklab, CanvasText 10%, transparent),
-      color-mix(in oklab, CanvasText 10%, transparent)
-    ),
-    var(--glass);
-  backdrop-filter: blur(18px) saturate(140%);
-  border-bottom: 1px solid var(--glass-border);
+      color-mix(in oklab, CanvasText 10%, transparent)),
+    var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--blur-2)) saturate(150%);
+  backdrop-filter: blur(var(--blur-2)) saturate(150%);
+  border-bottom: 1px solid var(--hairline);
 }
 
-html, body { color: var(--text); }
 .main-header {
-  font-size: 2.3rem; font-weight: 900; letter-spacing: .2px;
+  font-size: 2.35rem;
+  font-weight: 900;
+  letter-spacing: .2px;
+  text-align: center;
+  margin: .25rem 0 1.1rem;
   background: linear-gradient(90deg,
-              color-mix(in oklab, CanvasText 80%, var(--text)),
+              color-mix(in oklab, CanvasText 85%, var(--text)),
               color-mix(in oklab, CanvasText 50%, var(--text)));
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  text-align: center; margin: .25rem 0 1.1rem;
+  /* ultra subtle chromatic aberration for "hero" title only */
+  text-shadow:
+    0.4px 0.4px 0 rgba(255,0,120,0.05),
+   -0.4px -0.4px 0 rgba(0,180,255,0.05);
 }
 
 /* Status pill */
 .status-indicator {
   display:flex; align-items:center; justify-content:center;
   padding:.55rem .9rem; border-radius:999px; font-weight:700; font-size:.9rem;
-  border:1px solid var(--glass-border); background: var(--glass-strong);
-  backdrop-filter: blur(10px) saturate(130%); box-shadow: var(--shadow-1);
+  border:1px solid var(--hairline);
+  background:
+    radial-gradient(120% 130% at 50% 0%,
+      color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
+    var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: var(--shadow-1);
 }
 
-/* Cards */
-.card { border-radius:18px; padding:1.1rem; border:1px solid var(--glass-border);
+/* Generic liquid-glass card */
+.card, .chart-wrap, [data-testid="stDataFrame"], [data-testid="stExpander"],
+[data-testid="stAlert"] {
+  position: relative;
+  border-radius: var(--radius);
+  padding: 1rem;
+  border: 1px solid var(--hairline);
   background:
-    radial-gradient(120% 130% at 85% 15%, color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
-    radial-gradient(130% 120% at 15% 85%, color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
-    var(--glass);
-  backdrop-filter: blur(18px) saturate(140%); box-shadow: var(--shadow-1);
+    radial-gradient(120% 130% at 85% 15%,
+      color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
+    radial-gradient(120% 130% at 15% 85%,
+      color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
+    var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(150%);
+  backdrop-filter: blur(var(--blur-1)) saturate(150%);
+  box-shadow: var(--shadow-1);
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  will-change: transform;
 }
-.card:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: var(--border-strong); }
-.card-strong { background: var(--glass-strong); border:1px solid var(--border); }
-.session-info h3 { color: var(--text); margin:0 0 .5rem; font-weight:800; }
+.card:hover, .chart-wrap:hover,
+[data-testid="stDataFrame"]:hover, [data-testid="stExpander"]:hover,
+[data-testid="stAlert"]:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+  border-color: var(--hairline-strong);
+}
+.card-strong {
+  background:
+    radial-gradient(120% 130% at 80% 10%,
+      color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
+    var(--glass-bg-strong);
+  border: 1px solid var(--hairline-strong);
+}
+.session-info h3 { margin:0 0 .5rem; font-weight:800; color: var(--text); }
 .session-info p { margin:.25rem 0; color: var(--text-muted); }
 
-/* Notifications */
-.historical-notice,.pagination-info { border-radius:14px; padding:.9rem 1rem; font-weight:700;
-  border:1px solid var(--border); background: var(--glass);
+/* Notifications / info containers */
+.historical-notice, .pagination-info {
+  border-radius: 14px; padding: .9rem 1rem; font-weight: 700;
+  border: 1px solid var(--hairline);
+  background:
+    radial-gradient(120% 130% at 50% 0%,
+      color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
+    var(--glass-bg);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
 }
 
 /* Gauges grid */
 .widget-grid { display:grid; grid-template-columns: repeat(6, 1fr); gap:1rem; margin-top: .75rem; }
-.gauge-container { text-align:center; padding:.75rem; border-radius:16px; border:1px solid var(--glass-border);
+.gauge-container {
+  text-align:center; padding:.75rem; border-radius:16px; border:1px solid var(--hairline);
   background:
-    radial-gradient(120% 120% at 85% 15%, color-mix(in oklab, CanvasText 4%, transparent), transparent 60%),
-    radial-gradient(120% 130% at 20% 80%, color-mix(in oklab, CanvasText 4%, transparent), transparent 60%),
-    var(--glass);
-  backdrop-filter: blur(10px); transition: transform .2s ease, border-color .2s ease, background .2s ease; }
-.gauge-container:hover { transform: translateY(-2px); border-color: var(--border); }
+    radial-gradient(120% 120% at 85% 15%,
+      color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
+    radial-gradient(120% 120% at 20% 85%,
+      color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
+    var(--glass-bg);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  backdrop-filter: blur(10px) saturate(130%);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  will-change: transform;
+}
+.gauge-container:hover { transform: translateY(-2px); border-color: var(--hairline-strong); box-shadow: var(--shadow-1); }
 .gauge-title { font-size:.85rem; font-weight:600; color:var(--text-subtle); margin-bottom:.25rem; }
-
-/* Chart wrappers */
-.chart-wrap { border-radius:18px; border:1px solid var(--glass-border);
-  background:
-    radial-gradient(110% 120% at 85% 10%, color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
-    var(--glass);
-  padding:.75rem; box-shadow: var(--shadow-1); }
 
 /* Buttons */
 .stButton > button, div[data-testid="stDownloadButton"] > button {
-  border-radius:12px !important; font-weight:700 !important; color:var(--text) !important;
-  background: linear-gradient(135deg,
-              color-mix(in oklab, CanvasText 18%, var(--bg)),
-              color-mix(in oklab, CanvasText 18%, var(--bg))) !important;
-  border: 1px solid color-mix(in oklab, CanvasText 20%, var(--border-strong)) !important;
-  box-shadow: 0 6px 16px color-mix(in oklab, CanvasText 15%, transparent) !important;
-  transition: transform .15s ease, box-shadow .2s ease !important;
+  border-radius: 12px !important; font-weight: 700 !important; color: var(--text) !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in oklab, CanvasText 14%, var(--bg)),
+      color-mix(in oklab, CanvasText 18%, var(--bg))) !important;
+  border: 1px solid var(--hairline-strong) !important;
+  box-shadow: 0 8px 20px color-mix(in oklab, CanvasText 16%, transparent) !important;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease !important;
+  -webkit-backdrop-filter: blur(8px) saturate(130%);
+  backdrop-filter: blur(8px) saturate(130%);
 }
 .stButton > button:hover, div[data-testid="stDownloadButton"] > button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px color-mix(in oklab, CanvasText 18%, transparent) !important;
+  filter: brightness(1.02);
+  box-shadow: 0 14px 26px color-mix(in oklab, CanvasText 20%, transparent) !important;
 }
 .stButton > button:active, div[data-testid="stDownloadButton"] > button:active { transform: translateY(0); }
 
 /* Radio-as-tabs (glassy) */
 div[data-testid="stRadio"] > div[role="radiogroup"] {
   display:flex; gap:.5rem; flex-wrap:wrap;
-  background: var(--glass-strong);
-  border:1px solid var(--glass-border);
+  background: var(--glass-bg-strong);
+  border:1px solid var(--hairline);
   border-radius:14px; padding:.35rem;
-  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
   box-shadow: var(--shadow-1);
 }
 div[data-testid="stRadio"] > div[role="radiogroup"] > label {
-  border:1px solid var(--glass-border);
-  background: color-mix(in oklab, Canvas 85%, transparent);
+  border:1px solid var(--hairline);
+  background: color-mix(in oklab, Canvas 86%, transparent);
   padding:.45rem .8rem; border-radius:10px; font-weight:700; color:var(--text-subtle);
   transition: all .15s ease;
 }
@@ -248,52 +334,59 @@ div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
   color: var(--text); transform: translateY(-1px);
 }
 div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"] {
-  background: color-mix(in oklab, CanvasText 8%, var(--glass));
-  color: var(--text); border-color: var(--border);
-  box-shadow: inset 0 -2px 0 0 color-mix(in oklab, CanvasText 16%, transparent);
-}
-
-/* Data containers */
-[data-testid="stDataFrame"], [data-testid="stExpander"], [data-testid="stAlert"] {
-  border-radius:16px; border:1px solid var(--border);
   background:
-    radial-gradient(120% 120% at 80% 10%, color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
-    var(--glass);
-  backdrop-filter: blur(10px);
+    radial-gradient(100% 120% at 50% 0%,
+      color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
+    color-mix(in oklab, CanvasText 8%, var(--glass-bg));
+  color: var(--text); border-color: var(--hairline-strong);
+  box-shadow: inset 0 -2px 0 0 color-mix(in oklab, CanvasText 16%, transparent);
 }
 
 /* Metrics */
 div[data-testid="stMetric"] {
   position: relative;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   padding: 1rem 1.1rem;
   background:
-    radial-gradient(120% 140% at 10% 0%, color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
-    radial-gradient(140% 120% at 90% 100%, color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
-    var(--glass);
+    radial-gradient(120% 140% at 10% 0%,
+      color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
+    radial-gradient(140% 120% at 90% 100%,
+      color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
+    var(--glass-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
   backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--hairline);
   box-shadow: var(--shadow-1);
 }
 div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
   font-weight: 700;
   padding: .15rem .45rem;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--ok) 10%, transparent);
+  background: color-mix(in oklab, var(--ok) 12%, transparent);
 }
 
 /* Sidebar */
-[data-testid="stSidebar"] > div { background: var(--glass-strong); border-right:1px solid var(--glass-border); backdrop-filter: blur(18px) saturate(140%); }
+[data-testid="stSidebar"] > div {
+  background: var(--glass-bg-strong);
+  border-right:1px solid var(--hairline);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
 
 /* Inputs */
 label, .stTextInput, .stSelectbox, .stNumberInput, .stSlider { color: var(--text); }
-div[data-baseweb="input"] > div { background: var(--glass); border-radius:10px; border:1px solid var(--border); }
+div[data-baseweb="input"] > div {
+  background: var(--glass-bg);
+  border-radius:10px; border:1px solid var(--hairline);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  backdrop-filter: blur(10px) saturate(130%);
+}
 
 /* Scrollbars */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: color-mix(in oklab, CanvasText 50%, var(--border-strong)); }
+::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in oklab, CanvasText 50%, var(--hairline-strong)); }
 
 /* Focus ring */
 *:focus-visible { outline: 2px solid color-mix(in oklab, CanvasText 55%, var(--text)); outline-offset:2px; border-radius:4px; }
@@ -304,7 +397,53 @@ iframe[title="streamlit_echarts.st_echarts"] {
   width: 100% !important;
   display: block !important;
 }
+
+/* Low-power / no-backdrop-filter fallback */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  [data-testid="stHeader"],
+  .card, .chart-wrap, [data-testid="stDataFrame"], [data-testid="stExpander"],
+  [data-testid="stAlert"], .status-indicator, .gauge-container,
+  div[data-testid="stRadio"] > div[role="radiogroup"],
+  [data-testid="stSidebar"] > div {
+    background: linear-gradient(180deg,
+      color-mix(in oklab, CanvasText 8%, var(--bg)) 0%,
+      color-mix(in oklab, CanvasText 4%, var(--bg)) 100%);
+    box-shadow: var(--shadow-1);
+  }
+}
+
+/* Reduce-motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .card, .chart-wrap, .gauge-container { transition: none !important; }
+}
 </style>
+<script>
+(function(){
+  try {
+    const root = document.documentElement;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reduce && reduce.matches) return;
+    // Pointer tilt (very subtle)
+    let rafId = null;
+    function onMove(e){
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const x = (e.clientX / window.innerWidth) - 0.5;
+        const y = (e.clientY / window.innerHeight) - 0.5;
+        root.style.setProperty('--tilt-x', (y*3).toFixed(3)+'deg');
+        root.style.setProperty('--tilt-y', (-x*3).toFixed(3)+'deg');
+      });
+    }
+    window.addEventListener('pointermove', onMove, {passive:true});
+    // Scroll parallax variable (used by bg if desired)
+    function onScroll(){
+      const y = window.scrollY / Math.max(1, (document.body.scrollHeight - window.innerHeight));
+      root.style.setProperty('--parallax', y.toFixed(3));
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+  } catch(e){}
+})();
+</script>
 """
 
 # Apply CSS
@@ -1821,10 +1960,24 @@ def render_gps_map_plotly(df: pd.DataFrame):
             color=speed_col,
             color_continuous_scale="Turbo",
             hover_data=[c for c in ["timestamp", "power_w", "current_a", "voltage_v"] if c in df_filtered.columns],
-            zoom=12,
+            # initial zoom will be overridden by bounds below
+            zoom=8,
             height=520,
         )
         fig.update_layout(map_style="open-street-map")
+
+        # Auto-fit to data bounds (Maplibre traces support layout.map.bounds)
+        lat_min, lat_max = float(df_filtered["lat"].min()), float(df_filtered["lat"].max())
+        lon_min, lon_max = float(df_filtered["lon"].min()), float(df_filtered["lon"].max())
+        # Expand tiny boxes a bit
+        if lat_max - lat_min < 0.0005:
+            pad = 0.001
+            lat_min -= pad; lat_max += pad
+        if lon_max - lon_min < 0.0005:
+            pad = 0.001
+            lon_min -= pad; lon_max += pad
+        # Apply bounds for auto-zoom/center
+        fig.update_layout(map=dict(bounds=dict(west=lon_min, east=lon_max, south=lat_min, north=lat_max)))
     except Exception:
         # Fallback
         fig = px.scatter_mapbox(
@@ -1834,10 +1987,31 @@ def render_gps_map_plotly(df: pd.DataFrame):
             color=speed_col,
             color_continuous_scale="Turbo",
             hover_data=[c for c in ["timestamp", "power_w", "current_a", "voltage_v"] if c in df_filtered.columns],
-            zoom=12,
+            zoom=8,
             height=520,
         )
         fig.update_layout(mapbox_style="open-street-map")
+        # Heuristic center + zoom for Mapbox fallback
+        try:
+            lat_min, lat_max = float(df_filtered["lat"].min()), float(df_filtered["lat"].max())
+            lon_min, lon_max = float(df_filtered["lon"].min()), float(df_filtered["lon"].max())
+            center_lat = (lat_min + lat_max) / 2.0
+            center_lon = (lon_min + lon_max) / 2.0
+            # simple span->zoom heuristic
+            span = max(lat_max - lat_min, lon_max - lon_min)
+            if span <= 0.001: zoom = 16
+            elif span <= 0.01: zoom = 13
+            elif span <= 0.05: zoom = 11
+            elif span <= 0.1: zoom = 10
+            elif span <= 0.5: zoom = 9
+            elif span <= 1.0: zoom = 8
+            elif span <= 5.0: zoom = 6
+            elif span <= 10.0: zoom = 5
+            elif span <= 25.0: zoom = 4
+            else: zoom = 3
+            fig.update_layout(mapbox=dict(center=dict(lat=center_lat, lon=center_lon), zoom=zoom))
+        except Exception:
+            pass
 
     # Keep user zoom/position across reruns
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, uirevision="gps-map")
@@ -1863,7 +2037,11 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
                 gaps = dt[dt > 3 * dt.median()]
                 report["dropouts"] = int((gaps).sum() // report["median_dt_s"]) if not gaps.empty else 0
                 report["max_gap_s"] = float(dt.max())
-                report["span"] = str((ts.max() - ts.min())).split(".")[0]
+                # Format span as H:MM:SS (no "days") to ensure it fits the metric box
+                total_seconds = int((ts.max() - ts.min()).total_seconds())
+                hours, rem = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(rem, 60)
+                report["span"] = f"{hours:d}:{minutes:02d}:{seconds:02d}"
             else:
                 report["median_dt_s"] = None
                 report["hz"] = None
