@@ -100,354 +100,479 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------
-# Theme-Aware Frosted Glass UI (grayscale gradients)
+# Apple-Style Liquid Glass UI: theme-aware, accessible
 # -------------------------------------------------------
 def get_theme_aware_css():
-    return """
-<style>
-/* =========================
-   Apple "Liquid Glass" Theme
-   ========================= */
-:root {
-  color-scheme: light dark;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-               Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji",
-               "Segoe UI Symbol", "Noto Color Emoji";
+    # Subtle base64 noise texture (64x64 PNG), very light opacity
+    noise_png = (
+        "data:image/png;base64,"
+        "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsSAAALEgHS3X78"
+        "AAAAGXRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4xLjJ1Q6rjAAABZUlEQVR4Xu3aS26DQBBF"
+        "0eI0QGm0m4JwE4Jf9Y3oO1V9i1g1c7K7nKiWk4DkN3R4g7kKytb1E1dL5m1g8e9y0L0mWkqV"
+        "k5a2l2rY9wGgJb7z0hWk5kS+H0uA1Q2w2w3mZ5B3QGJ6bGg2wAq6fKcXo3d7k8o2b7v8b8/"
+        "W3l9Hk8gk5E0Qw6dZcY9/8K8f3rDg6nM8ZfCqgJr2j4lP6iJp7b8KStQZp3tqV6X2mOTwF2e"
+        "YHk8kQ7uYx/2cKQb6b1m4k9tK0bY3u7lYwUEV7l2OXP3d1G0mQkL1lXb7f0W+9R8q6+0vCwQ"
+        "gA4bGQh4aGIZ8fHx4cHBw+Pj4/f39+fn5+Pj4/Pz8x8dHj1Q7KQ2mB2s7qf8t3z8f7nQ9v0n"
+        "Q0E2kCkZb5XUo7iO2v8Rz8v0a9+2rCjH8M6gK6n6M3u4S3n9i3d/0Vw8gk4Z8g9G6cZ3dA2U"
+        "vI2f9w7kG6fGfZgkBv7Dk0GgWJjY2NjY2NjY+Pj4+Pj4eHh4eHh4eHh4fHxyK7J2mYz5QkA1"
+        "S8kz2Xg4k8bQFZ5m8g4m8aQFQAAAAAElFTkSuQmCC"
+    )
 
-  /* Color tokens (adaptive to Canvas/CanvasText) */
+    return f"""
+<style>
+:root {{
+  color-scheme: light dark;
+
+  /* Base palette */
   --bg: Canvas;
   --text: CanvasText;
+
+  /* Adaptive text */
+  --text-strong: color-mix(in oklab, CanvasText 92%, Canvas);
+  --text: color-mix(in oklab, CanvasText 84%, Canvas);
   --text-muted: color-mix(in oklab, CanvasText 60%, Canvas);
   --text-subtle: color-mix(in oklab, CanvasText 45%, Canvas);
 
-  /* Hairline borders */
-  --hairline: color-mix(in oklab, CanvasText 22%, transparent);
-  --hairline-strong: color-mix(in oklab, CanvasText 28%, transparent);
+  /* Glass + strokes + highlights */
+  --glass: color-mix(in oklab, Canvas 70%, transparent);
+  --glass-strong: color-mix(in oklab, Canvas 60%, transparent);
+  --glass-dim: color-mix(in oklab, Canvas 78%, transparent);
 
-  /* Glass tints + layers */
-  --glass-tint: color-mix(in oklab, CanvasText 12%, transparent);
-  --glass-tint-strong: color-mix(in oklab, CanvasText 18%, transparent);
-  --glass-bg: color-mix(in oklab, Canvas 78%, transparent);
-  --glass-bg-strong: color-mix(in oklab, Canvas 68%, transparent);
-
-  /* Blur, radii, shadows */
-  --blur-1: 14px;
-  --blur-2: 22px;
-  --radius-sm: 12px;
-  --radius: 16px;
-  --radius-lg: 22px;
-  --shadow-1: 0 10px 24px color-mix(in oklab, CanvasText 14%, transparent);
-  --shadow-2: 0 18px 42px color-mix(in oklab, CanvasText 18%, transparent);
+  --glass-stroke: color-mix(in oklab, CanvasText 20%, transparent);
+  --glass-stroke-weak: color-mix(in oklab, CanvasText 12%, transparent);
+  --glass-inner: color-mix(in oklab, CanvasText 8%, transparent);
+  --glass-specular: color-mix(in oklab, CanvasText 18%, transparent);
 
   /* Accents */
-  --ok: color-mix(in oklab, #2ecc71 70%, CanvasText);
-  --warn: color-mix(in oklab, #f39c12 70%, CanvasText);
-  --danger: color-mix(in oklab, #e74c3c 70%, CanvasText);
-}
+  --ok: color-mix(in oklab, #43a047 70%, CanvasText);
+  --accent: color-mix(in oklab, #0a84ff 70%, CanvasText);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --glass-bg: color-mix(in oklab, Canvas 64%, transparent);
-    --glass-bg-strong: color-mix(in oklab, Canvas 56%, transparent);
-    --shadow-1: 0 10px 24px rgba(0,0,0,.35);
-    --shadow-2: 0 22px 48px rgba(0,0,0,.45);
-  }
-}
+  /* Blur + radii + shadows */
+  --blur-1: 14px;
+  --blur-2: 22px;
+  --radius-s: 12px;
+  --radius-m: 16px;
+  --radius-l: 20px;
+  --radius-xl: 24px;
 
-html, body {
-  font-family: var(--font-sans);
+  --shadow-1: 0 6px 24px color-mix(in oklab, CanvasText 14%, transparent);
+  --shadow-2: 0 14px 40px color-mix(in oklab, CanvasText 18%, transparent);
+  --shadow-inset: inset 0 1px 0 color-mix(in oklab, #fff 30%, transparent),
+                  inset 0 -1px 0 color-mix(in oklab, CanvasText 10%, transparent);
+
+  --parallax-strength: 0.03;
+
+  /* Noise overlay */
+  --noise-url: url('{noise_png}');
+  --noise-opacity: 0.02;
+}}
+
+@media (prefers-color-scheme: dark) {{
+  :root {{
+    --glass: color-mix(in oklab, Canvas 62%, transparent);
+    --glass-strong: color-mix(in oklab, Canvas 52%, transparent);
+    --glass-dim: color-mix(in oklab, Canvas 70%, transparent);
+    --blur-1: 16px;
+    --blur-2: 26px;
+    --shadow-1: 0 10px 28px rgba(0,0,0,0.38);
+    --shadow-2: 0 20px 48px rgba(0,0,0,0.48);
+  }}
+}}
+
+* {{
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji",
+               "Segoe UI Symbol", sans-serif;
+}}
+
+html, body {{
   color: var(--text);
-}
+  background: none;
+}}
 
-/* Background with parallaxable layers + subtle chroma + noise */
-[data-testid="stAppViewContainer"] {
+[data-testid="stAppViewContainer"] {{
+  position: relative;
   background:
-    radial-gradient(1200px 600px at 8% -10%,
-      color-mix(in oklab, CanvasText 9%, transparent), transparent 60%),
-    radial-gradient(1150px 700px at 110% 110%,
-      color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
-    radial-gradient(900px 520px at 50% 50%,
-      color-mix(in oklab, CanvasText 5%, transparent), transparent 65%),
+    radial-gradient(1000px 600px at 10% -10%,
+                    color-mix(in oklab, CanvasText 12%, transparent), transparent 60%),
+    radial-gradient(1100px 700px at 110% 110%,
+                    color-mix(in oklab, CanvasText 10%, transparent), transparent 60%),
     linear-gradient(180deg,
-      color-mix(in oklab, CanvasText 5%, var(--bg)) 0%,
-      var(--bg) 60%);
+                    color-mix(in oklab, CanvasText 6%, var(--bg)) 0%,
+                    var(--bg) 65%);
   background-attachment: fixed;
-  will-change: background-position;
-}
-
-/* Noise overlay (very subtle) */
-body::before {
+}}
+[data-testid="stAppViewContainer"]::before {{
   content: "";
-  position: fixed; inset: 0; pointer-events: none;
-  background-image:
-    url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAI0lEQVQoU2NkgAJGxLYxYGBg+P//PyYwGJQwGJQmCwYAAHWbC2cSP2vRAAAAAElFTkSuQmCC');
-  opacity: .06;
-  mix-blend-mode: overlay;
-  z-index: 0;
-}
+  position: fixed;
+  inset: 0;
+  background: var(--noise-url);
+  opacity: var(--noise-opacity);
+  pointer-events: none;
+  z-index: -1;
+  mix-blend-mode: soft-light;
+}}
 
-/* Header glass */
-[data-testid="stHeader"] {
+[data-testid="stHeader"] {{
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background:
     linear-gradient(90deg,
-      color-mix(in oklab, CanvasText 10%, transparent),
-      color-mix(in oklab, CanvasText 10%, transparent)),
-    var(--glass-bg);
-  -webkit-backdrop-filter: blur(var(--blur-2)) saturate(150%);
-  backdrop-filter: blur(var(--blur-2)) saturate(150%);
-  border-bottom: 1px solid var(--hairline);
-}
+      color-mix(in oklab, CanvasText 8%, transparent),
+      color-mix(in oklab, CanvasText 8%, transparent)),
+    var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  border-bottom: 1px solid var(--glass-stroke);
+  box-shadow: var(--shadow-1);
+}}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {{
+  [data-testid="stHeader"] {{
+    background: linear-gradient(180deg,
+       color-mix(in oklab, CanvasText 6%, var(--bg)),
+       var(--bg));
+  }}
+}}
 
-.main-header {
-  font-size: 2.35rem;
+.main-header {{
+  font-size: 2.4rem;
   font-weight: 900;
   letter-spacing: .2px;
-  text-align: center;
-  margin: .25rem 0 1.1rem;
   background: linear-gradient(90deg,
               color-mix(in oklab, CanvasText 85%, var(--text)),
-              color-mix(in oklab, CanvasText 50%, var(--text)));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  /* ultra subtle chromatic aberration for "hero" title only */
+              color-mix(in oklab, CanvasText 55%, var(--text)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+  margin: .35rem 0 1.1rem;
   text-shadow:
-    0.4px 0.4px 0 rgba(255,0,120,0.05),
-   -0.4px -0.4px 0 rgba(0,180,255,0.05);
-}
+    0 1px 0 color-mix(in oklab, #fff 26%, transparent),
+    0 6px 18px color-mix(in oklab, CanvasText 18%, transparent);
+  filter: drop-shadow(0 10px 16px color-mix(in oklab, CanvasText 18%, transparent));
+}}
 
-/* Status pill */
-.status-indicator {
-  display:flex; align-items:center; justify-content:center;
-  padding:.55rem .9rem; border-radius:999px; font-weight:700; font-size:.9rem;
-  border:1px solid var(--hairline);
+.status-indicator {{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: .55rem .9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .9rem;
+  border: 1px solid var(--glass-stroke);
   background:
-    radial-gradient(120% 130% at 50% 0%,
-      color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
-    var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  backdrop-filter: blur(12px) saturate(140%);
-  box-shadow: var(--shadow-1);
-}
+    linear-gradient(180deg,
+      color-mix(in oklab, #fff 8%, transparent),
+      color-mix(in oklab, CanvasText 6%, transparent)),
+    var(--glass-strong);
+  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  box-shadow: var(--shadow-1), var(--shadow-inset);
+}}
 
-/* Generic liquid-glass card */
-.card, .chart-wrap, [data-testid="stDataFrame"], [data-testid="stExpander"],
-[data-testid="stAlert"] {
+.card {{
   position: relative;
-  border-radius: var(--radius);
-  padding: 1rem;
-  border: 1px solid var(--hairline);
+  border-radius: var(--radius-l);
+  padding: 1.1rem;
+  border: 1px solid var(--glass-stroke);
   background:
     radial-gradient(120% 130% at 85% 15%,
       color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
-    radial-gradient(120% 130% at 15% 85%,
+    radial-gradient(130% 120% at 15% 85%,
       color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
-    var(--glass-bg);
-  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(150%);
-  backdrop-filter: blur(var(--blur-1)) saturate(150%);
+    var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur-2)) saturate(160%);
+  backdrop-filter: blur(var(--blur-2)) saturate(160%);
   box-shadow: var(--shadow-1);
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
   will-change: transform;
-}
-.card:hover, .chart-wrap:hover,
-[data-testid="stDataFrame"]:hover, [data-testid="stExpander"]:hover,
-[data-testid="stAlert"]:hover {
-  transform: translateY(-2px);
+}}
+.card::before {{
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 color-mix(in oklab, #fff 30%, transparent),
+              inset 0 -1px 0 color-mix(in oklab, CanvasText 14%, transparent);
+}}
+.card:hover {{
+  transform: translateY(-3px);
   box-shadow: var(--shadow-2);
-  border-color: var(--hairline-strong);
-}
-.card-strong {
-  background:
-    radial-gradient(120% 130% at 80% 10%,
-      color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
-    var(--glass-bg-strong);
-  border: 1px solid var(--hairline-strong);
-}
-.session-info h3 { margin:0 0 .5rem; font-weight:800; color: var(--text); }
-.session-info p { margin:.25rem 0; color: var(--text-muted); }
+  border-color: color-mix(in oklab, CanvasText 26%, transparent);
+}}
+.card-strong {{
+  background: var(--glass-strong);
+  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
+}}
 
-/* Notifications / info containers */
-.historical-notice, .pagination-info {
-  border-radius: 14px; padding: .9rem 1rem; font-weight: 700;
-  border: 1px solid var(--hairline);
+.session-info h3 {{
+  color: var(--text);
+  margin: 0 0 .5rem;
+  font-weight: 800;
+}}
+.session-info p {{
+  margin: .25rem 0;
+  color: var(--text-muted);
+}}
+
+.historical-notice, .pagination-info {{
+  border-radius: var(--radius-m);
+  padding: .9rem 1rem;
+  font-weight: 700;
+  border: 1px solid var(--glass-stroke);
   background:
-    radial-gradient(120% 130% at 50% 0%,
+    radial-gradient(110% 120% at 80% 10%,
       color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
-    var(--glass-bg);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  backdrop-filter: blur(10px) saturate(140%);
-}
+    var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  backdrop-filter: blur(var(--blur-1)) saturate(140%);
+}}
 
-/* Gauges grid */
-.widget-grid { display:grid; grid-template-columns: repeat(6, 1fr); gap:1rem; margin-top: .75rem; }
-.gauge-container {
-  text-align:center; padding:.75rem; border-radius:16px; border:1px solid var(--hairline);
+.widget-grid {{
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-top: .75rem;
+}}
+.gauge-container {{
+  text-align: center;
+  padding: .75rem;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--glass-stroke);
   background:
     radial-gradient(120% 120% at 85% 15%,
-      color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
-    radial-gradient(120% 120% at 20% 85%,
-      color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
-    var(--glass-bg);
-  -webkit-backdrop-filter: blur(10px) saturate(130%);
-  backdrop-filter: blur(10px) saturate(130%);
-  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+      color-mix(in oklab, CanvasText 4%, transparent), transparent 60%),
+    radial-gradient(120% 130% at 20% 80%,
+      color-mix(in oklab, CanvasText 4%, transparent), transparent 60%),
+    var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
   will-change: transform;
-}
-.gauge-container:hover { transform: translateY(-2px); border-color: var(--hairline-strong); box-shadow: var(--shadow-1); }
-.gauge-title { font-size:.85rem; font-weight:600; color:var(--text-subtle); margin-bottom:.25rem; }
-
-/* Buttons */
-.stButton > button, div[data-testid="stDownloadButton"] > button {
-  border-radius: 12px !important; font-weight: 700 !important; color: var(--text) !important;
-  background:
-    linear-gradient(135deg,
-      color-mix(in oklab, CanvasText 14%, var(--bg)),
-      color-mix(in oklab, CanvasText 18%, var(--bg))) !important;
-  border: 1px solid var(--hairline-strong) !important;
-  box-shadow: 0 8px 20px color-mix(in oklab, CanvasText 16%, transparent) !important;
-  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease !important;
-  -webkit-backdrop-filter: blur(8px) saturate(130%);
-  backdrop-filter: blur(8px) saturate(130%);
-}
-.stButton > button:hover, div[data-testid="stDownloadButton"] > button:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.02);
-  box-shadow: 0 14px 26px color-mix(in oklab, CanvasText 20%, transparent) !important;
-}
-.stButton > button:active, div[data-testid="stDownloadButton"] > button:active { transform: translateY(0); }
-
-/* Radio-as-tabs (glassy) */
-div[data-testid="stRadio"] > div[role="radiogroup"] {
-  display:flex; gap:.5rem; flex-wrap:wrap;
-  background: var(--glass-bg-strong);
-  border:1px solid var(--hairline);
-  border-radius:14px; padding:.35rem;
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  backdrop-filter: blur(12px) saturate(150%);
   box-shadow: var(--shadow-1);
-}
-div[data-testid="stRadio"] > div[role="radiogroup"] > label {
-  border:1px solid var(--hairline);
-  background: color-mix(in oklab, Canvas 86%, transparent);
-  padding:.45rem .8rem; border-radius:10px; font-weight:700; color:var(--text-subtle);
-  transition: all .15s ease;
-}
-div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
-  color: var(--text); transform: translateY(-1px);
-}
-div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"] {
-  background:
-    radial-gradient(100% 120% at 50% 0%,
-      color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
-    color-mix(in oklab, CanvasText 8%, var(--glass-bg));
-  color: var(--text); border-color: var(--hairline-strong);
-  box-shadow: inset 0 -2px 0 0 color-mix(in oklab, CanvasText 16%, transparent);
-}
+}}
+.gauge-container:hover {{
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, CanvasText 22%, transparent);
+}}
+.gauge-title {{
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--text-subtle);
+  margin-bottom: .25rem;
+}}
 
-/* Metrics */
-div[data-testid="stMetric"] {
+.chart-wrap {{
+  border-radius: var(--radius-l);
+  border: 1px solid var(--glass-stroke);
+  background:
+    radial-gradient(110% 120% at 85% 10%,
+      color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
+    var(--glass-dim);
+  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  backdrop-filter: blur(var(--blur-1)) saturate(140%);
+  padding: .75rem;
+  box-shadow: var(--shadow-1);
+}}
+
+.stButton > button, div[data-testid="stDownloadButton"] > button {{
+  border-radius: var(--radius-m) !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  background: linear-gradient(135deg,
+              color-mix(in oklab, CanvasText 18%, var(--bg)),
+              color-mix(in oklab, CanvasText 14%, var(--bg))) !important;
+  border: 1px solid color-mix(in oklab, CanvasText 20%, var(--glass-stroke)) !important;
+  box-shadow: 0 6px 16px color-mix(in oklab, CanvasText 15%, transparent) !important;
+  transition: transform .15s ease, box-shadow .2s ease !important;
+}}
+.stButton > button:hover, div[data-testid="stDownloadButton"] > button:hover {{
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px color-mix(in oklab, CanvasText 18%, transparent) !important;
+}}
+.stButton > button:active, div[data-testid="stDownloadButton"] > button:active {{
+  transform: translateY(0);
+}}
+
+div[data-testid="stRadio"] > div[role="radiogroup"] {{
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--radius-m);
+  padding: .35rem;
+  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(150%);
+  backdrop-filter: blur(var(--blur-1)) saturate(150%);
+  box-shadow: var(--shadow-1);
+}}
+div[data-testid="stRadio"] > div[role="radiogroup"] > label {{
+  border: 1px solid var(--glass-stroke-weak);
+  background: color-mix(in oklab, Canvas 86%, transparent);
+  padding: .45rem .8rem;
+  border-radius: 10px;
+  font-weight: 700;
+  color: var(--text-subtle);
+  transition: all .15s ease;
+}}
+div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {{
+  color: var(--text);
+  transform: translateY(-1px);
+}}
+div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"] {{
+  background: color-mix(in oklab, CanvasText 8%, var(--glass));
+  color: var(--text);
+  border-color: color-mix(in oklab, CanvasText 20%, var(--glass-stroke));
+  box-shadow: inset 0 -2px 0 0 color-mix(in oklab, CanvasText 16%, transparent);
+}}
+
+[data-testid="stDataFrame"], [data-testid="stExpander"], [data-testid="stAlert"] {{
+  border-radius: var(--radius-m);
+  border: 1px solid var(--glass-stroke);
+  background:
+    radial-gradient(120% 120% at 80% 10%,
+      color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
+    var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur-1));
+  backdrop-filter: blur(var(--blur-1));
+}}
+
+div[data-testid="stMetric"] {{
   position: relative;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-l);
   padding: 1rem 1.1rem;
   background:
-    radial-gradient(120% 140% at 10% 0%,
-      color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
-    radial-gradient(140% 120% at 90% 100%,
-      color-mix(in oklab, CanvasText 7%, transparent), transparent 60%),
-    var(--glass-bg);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid var(--hairline);
+    linear-gradient(180deg,
+      color-mix(in oklab, #fff 10%, transparent),
+      color-mix(in oklab, CanvasText 6%, transparent)),
+    var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur-2)) saturate(160%);
+  backdrop-filter: blur(var(--blur-2)) saturate(160%);
+  border: 1px solid var(--glass-stroke);
   box-shadow: var(--shadow-1);
-}
-div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+}}
+div[data-testid="stMetric"]::before {{
+  /* Rim lighting */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--shadow-inset);
+}}
+div[data-testid="stMetric"] [data-testid="stMetricDelta"] {{
   font-weight: 700;
   padding: .15rem .45rem;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--ok) 12%, transparent);
-}
+  background: color-mix(in oklab, var(--ok) 10%, transparent);
+}}
 
-/* Sidebar */
-[data-testid="stSidebar"] > div {
-  background: var(--glass-bg-strong);
-  border-right:1px solid var(--hairline);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
-}
+[data-testid="stSidebar"] > div {{
+  background: var(--glass-strong);
+  border-right: 1px solid var(--glass-stroke);
+  -webkit-backdrop-filter: blur(var(--blur-2)) saturate(160%);
+  backdrop-filter: blur(var(--blur-2)) saturate(160%);
+}}
 
-/* Inputs */
-label, .stTextInput, .stSelectbox, .stNumberInput, .stSlider { color: var(--text); }
-div[data-baseweb="input"] > div {
-  background: var(--glass-bg);
-  border-radius:10px; border:1px solid var(--hairline);
-  -webkit-backdrop-filter: blur(10px) saturate(130%);
-  backdrop-filter: blur(10px) saturate(130%);
-}
+label, .stTextInput, .stSelectbox, .stNumberInput, .stSlider {{
+  color: var(--text);
+}}
+div[data-baseweb="input"] > div {{
+  background: var(--glass);
+  border-radius: 10px;
+  border: 1px solid var(--glass-stroke);
+}}
 
-/* Scrollbars */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: color-mix(in oklab, CanvasText 50%, var(--hairline-strong)); }
+::-webkit-scrollbar {{ width: 10px; height: 10px; }}
+::-webkit-scrollbar-track {{ background: transparent; }}
+::-webkit-scrollbar-thumb {{
+  background: color-mix(in oklab, CanvasText 30%, transparent);
+  border-radius: 6px;
+}}
+::-webkit-scrollbar-thumb:hover {{
+  background: color-mix(in oklab, CanvasText 50%, transparent);
+}}
 
-/* Focus ring */
-*:focus-visible { outline: 2px solid color-mix(in oklab, CanvasText 55%, var(--text)); outline-offset:2px; border-radius:4px; }
+*:focus-visible {{
+  outline: 2px solid color-mix(in oklab, CanvasText 55%, var(--text));
+  outline-offset: 2px;
+  border-radius: 4px;
+}}
 
-/* ECharts iframe height safeguard */
-iframe[title="streamlit_echarts.st_echarts"] {
+iframe[title="streamlit_echarts.st_echarts"] {{
   min-height: 160px !important;
   width: 100% !important;
   display: block !important;
-}
+}}
 
-/* Low-power / no-backdrop-filter fallback */
-@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  [data-testid="stHeader"],
-  .card, .chart-wrap, [data-testid="stDataFrame"], [data-testid="stExpander"],
-  [data-testid="stAlert"], .status-indicator, .gauge-container,
-  div[data-testid="stRadio"] > div[role="radiogroup"],
-  [data-testid="stSidebar"] > div {
-    background: linear-gradient(180deg,
-      color-mix(in oklab, CanvasText 8%, var(--bg)) 0%,
-      color-mix(in oklab, CanvasText 4%, var(--bg)) 100%);
-    box-shadow: var(--shadow-1);
-  }
-}
-
-/* Reduce-motion accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .card, .chart-wrap, .gauge-container { transition: none !important; }
-}
+@media (prefers-reduced-motion: reduce) {{
+  .card, .gauge-container, .chart-wrap, .status-indicator {{
+    transition: none !important;
+  }}
+}}
 </style>
+"""
+
+
+def get_liquid_glass_js():
+    # Minimal micro-interactions (tilt/parallax), disabled if reduced motion
+    return """
 <script>
 (function(){
   try {
-    const root = document.documentElement;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (reduce && reduce.matches) return;
-    // Pointer tilt (very subtle)
-    let rafId = null;
-    function onMove(e){
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const x = (e.clientX / window.innerWidth) - 0.5;
-        const y = (e.clientY / window.innerHeight) - 0.5;
-        root.style.setProperty('--tilt-x', (y*3).toFixed(3)+'deg');
-        root.style.setProperty('--tilt-y', (-x*3).toFixed(3)+'deg');
+    const prefersReduced =
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+
+    const tiltSelectors = ['.card', '.gauge-container', '.chart-wrap'];
+    const maxTilt = 4; // degrees
+    function handleMouseMove(e) {
+      const rect = this.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const rx = (py - 0.5) * -maxTilt;
+      const ry = (px - 0.5) * maxTilt;
+      this.style.transform =
+        `translateY(-2px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+    }
+    function resetTilt() {
+      this.style.transform = 'translateY(-2px)';
+    }
+    tiltSelectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        el.addEventListener('mousemove', handleMouseMove, {passive: true});
+        el.addEventListener('mouseleave', resetTilt, {passive: true});
       });
+    });
+
+    // Subtle scroll parallax on background
+    const app = document.querySelector('[data-testid="stAppViewContainer"]');
+    if (app) {
+      let ticking = false;
+      window.addEventListener('scroll', function() {
+        if (ticking) return;
+        window.requestAnimationFrame(function() {
+          const y = window.scrollY || 0;
+          app.style.backgroundPosition =
+            `center ${Math.round(y * 0.06)}px, right ${Math.round(y * 0.04)}px, center 0`;
+          ticking = false;
+        });
+        ticking = true;
+      }, {passive: true});
     }
-    window.addEventListener('pointermove', onMove, {passive:true});
-    // Scroll parallax variable (used by bg if desired)
-    function onScroll(){
-      const y = window.scrollY / Math.max(1, (document.body.scrollHeight - window.innerHeight));
-      root.style.setProperty('--parallax', y.toFixed(3));
-    }
-    window.addEventListener('scroll', onScroll, {passive:true});
-  } catch(e){}
+  } catch(e) {}
 })();
 </script>
 """
 
-# Apply CSS
+
+# Apply CSS + JS
 st.markdown(get_theme_aware_css(), unsafe_allow_html=True)
+st.markdown(get_liquid_glass_js(), unsafe_allow_html=True)
 
 # Logger setup
 def setup_terminal_logging():
@@ -461,6 +586,7 @@ def setup_terminal_logging():
         )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+
 
 setup_terminal_logging()
 
@@ -659,7 +785,8 @@ class EnhancedTelemetryManager:
                     range_end = offset + SUPABASE_MAX_ROWS_PER_REQUEST - 1
 
                     self.logger.info(
-                        f"📄 Fetching page {request_count + 1}: rows {offset}-{range_end}"
+                        f"📄 Fetching page {request_count + 1}: rows "
+                        f"{offset}-{range_end}"
                     )
 
                     response = (
@@ -717,7 +844,8 @@ class EnhancedTelemetryManager:
                 df = pd.DataFrame(all_data)
                 df["data_source"] = data_source
                 self.logger.info(
-                    f"✅ Successfully fetched {len(df)} total rows for session {session_id[:8]}..."
+                    f"✅ Successfully fetched {len(df)} total rows for session "
+                    f"{session_id[:8]}..."
                 )
                 return df
             else:
@@ -774,7 +902,8 @@ class EnhancedTelemetryManager:
 
                 except Exception as e:
                     self.logger.error(
-                        f"❌ Error fetching session records at offset {offset}: {e}"
+                        f"❌ Error fetching session records at offset {offset}: "
+                        f"{e}"
                     )
                     break
 
@@ -798,7 +927,9 @@ class EnhancedTelemetryManager:
                     }
                 else:
                     sessions[session_id]["record_count"] += 1
-                    if session_name and not sessions[session_id].get("session_name"):
+                    if session_name and not sessions[session_id].get(
+                        "session_name"
+                    ):
                         sessions[session_id]["session_name"] = session_name
                     if timestamp < sessions[session_id]["start_time"]:
                         sessions[session_id]["start_time"] = timestamp
@@ -828,7 +959,8 @@ class EnhancedTelemetryManager:
                     )
                 except Exception as e:
                     self.logger.error(
-                        f"❌ Error processing session {session_info['session_id']}: {e}"
+                        f"❌ Error processing session "
+                        f"{session_info['session_id']}: {e}"
                     )
 
             sorted_sessions = sorted(
@@ -943,7 +1075,7 @@ def initialize_session_state():
         "data_quality_notifications": [],
     }
 
-    for key, value in defaults.items():
+    for key, value in defaults.items:
         if key not in st.session_state:
             st.session_state[key] = value
 
@@ -965,15 +1097,23 @@ def calculate_roll_and_pitch(df: pd.DataFrame) -> pd.DataFrame:
         denominator_roll = np.sqrt(
             df_calc["accel_x"] ** 2 + df_calc["accel_z"] ** 2
         )
-        denominator_roll = np.where(denominator_roll == 0, 1e-10, denominator_roll)
-        df_calc["roll_rad"] = np.arctan2(df_calc["accel_y"], denominator_roll)
+        denominator_roll = np.where(
+            denominator_roll == 0, 1e-10, denominator_roll
+        )
+        df_calc["roll_rad"] = np.arctan2(
+            df_calc["accel_y"], denominator_roll
+        )
         df_calc["roll_deg"] = np.degrees(df_calc["roll_rad"])
 
         denominator_pitch = np.sqrt(
             df_calc["accel_y"] ** 2 + df_calc["accel_z"] ** 2
         )
-        denominator_pitch = np.where(denominator_pitch == 0, 1e-10, denominator_pitch)
-        df_calc["pitch_rad"] = np.arctan2(df_calc["accel_x"], denominator_pitch)
+        denominator_pitch = np.where(
+            denominator_pitch == 0, 1e-10, denominator_pitch
+        )
+        df_calc["pitch_rad"] = np.arctan2(
+            df_calc["accel_x"], denominator_pitch
+        )
         df_calc["pitch_deg"] = np.degrees(df_calc["pitch_rad"])
 
         df_calc[["roll_rad", "roll_deg", "pitch_rad", "pitch_deg"]] = (
@@ -1071,22 +1211,26 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
                 kpis["total_distance_km"] / kpis["total_energy_kwh"]
             )
 
+        # Battery mapping:
+        #  - Absolute system max is 65 V (not used for %)
+        #  - 58.5 V = 100% SOC
+        #  - 50.4 V = 0% SOC
+        #  - Clamp and leave a tiny cap gap to avoid visual clipping
         if "voltage_v" in df.columns:
             voltage_data = df["voltage_v"].dropna()
             if not voltage_data.empty:
                 kpis["battery_voltage_v"] = max(0, float(voltage_data.iloc[-1]))
-                # Simple linear band example
-                max_voltage = 58.5
-                min_voltage = 50.4
+                full_v = 58.5
+                min_v = 50.4
                 cv = kpis["battery_voltage_v"]
-                if cv > min_voltage:
-                    kpis["battery_percentage"] = min(
-                        100.0,
-                        max(
-                            0.0,
-                            ((cv - min_voltage) / (max_voltage - min_voltage)) * 100.0,
-                        ),
-                    )
+                if cv >= full_v:
+                    percent = 100.0
+                elif cv <= min_v:
+                    percent = 0.0
+                else:
+                    percent = ((cv - min_v) / (full_v - min_v)) * 100.0
+                # Tiny safety gap so the gauge never hard-slams 100 visually
+                kpis["battery_percentage"] = min(99.8, max(0.0, percent))
 
         if "current_a" in df.columns:
             curr_data = df["current_a"].dropna()
@@ -1141,7 +1285,13 @@ def _echarts_base_opts(title: str = "") -> Dict[str, Any]:
             "top": 6,
             "textStyle": {"fontSize": 14, "fontWeight": 800},
         },
-        "grid": {"left": "4%", "right": "4%", "top": 60, "bottom": 50, "containLabel": True},
+        "grid": {
+            "left": "4%",
+            "right": "4%",
+            "top": 60,
+            "bottom": 50,
+            "containLabel": True,
+        },
         "tooltip": {"trigger": "axis"},
         "legend": {"top": 28},
         "xAxis": {"type": "time", "axisLine": {"lineStyle": {"color": "#888"}}},
@@ -1155,6 +1305,7 @@ def _echarts_base_opts(title: str = "") -> Dict[str, Any]:
         "progressive": 2000,
         "progressiveThreshold": 4000,
     }
+
 
 def _num_or_none(x) -> Optional[float]:
     try:
@@ -1185,18 +1336,24 @@ def _echarts_responsive_events() -> Dict[str, str]:
         "  }"
         "  if(typeof IntersectionObserver!=='undefined'){"
         "    try{var io=new IntersectionObserver(function(es){"
-        "      for(var i=0;i<es.length;i++){if(es[i].isIntersecting){setTimeout(safe,60);setTimeout(safe,180);}}"
+        "      for(var i=0;i<es.length;i++){if(es[i].isIntersecting){"
+        "        setTimeout(safe,60);setTimeout(safe,180);}}"
         "    },{root:null,threshold:0}); io.observe(el);}catch(e){}"
         "  }"
         "  if(typeof MutationObserver!=='undefined'){"
         "    try{var tablist=document.querySelector('[data-baseweb=\"tab-list\"]');"
-        "    if(tablist){var mo=new MutationObserver(function(){setTimeout(safe,60);setTimeout(safe,180);});"
-        "      mo.observe(tablist,{attributes:true,subtree:true,attributeFilter:['aria-selected','aria-hidden','style']});}"
+        "    if(tablist){var mo=new MutationObserver(function(){"
+        "      setTimeout(safe,60);setTimeout(safe,180);});"
+        "      mo.observe(tablist,{attributes:true,subtree:true,"
+        "      attributeFilter:['aria-selected','aria-hidden','style']});}"
         "    }catch(e){}"
         "  }"
-        "  document.addEventListener('visibilitychange', function(){setTimeout(safe,60)});"
-        "  var tries=0; var iv=setInterval(function(){var r=el.getBoundingClientRect();"
-        "    if(r.width>0&&r.height>0){safe();clearInterval(iv);} if(++tries>60){clearInterval(iv);}},150);"
+        "  document.addEventListener('visibilitychange', function(){"
+        "    setTimeout(safe,60)});"
+        "  var tries=0; var iv=setInterval(function(){"
+        "    var r=el.getBoundingClientRect();"
+        "    if(r.width>0&&r.height>0){safe();clearInterval(iv);} "
+        "    if(++tries>60){clearInterval(iv);}},150);"
         "  el.__t3_hooks__=true;"
         "}"
         "return null;}catch(e){return null;}"
@@ -1231,8 +1388,10 @@ def create_small_gauge_option(
     if max_val is None or max_val <= 0:
         max_val = value * 1.2 if value > 0 else 1.0
 
+    # Leave a tiny limit gap so pointer doesn't overlap stroke cap
     v = float(value or 0.0)
     mx = float(max_val)
+    v = min(v, mx - (mx * 0.002))
 
     r, g, b = _rgb_tuple(color_hex)
     color = f"rgb({r},{g},{b})"
@@ -1248,33 +1407,45 @@ def create_small_gauge_option(
             "lineStyle": {
                 "width": 10,
                 "color": [
-                    [0.6, f"rgba({r},{g},{b},0.15)"],
-                    [1.0, f"rgba({r},{g},{b},0.3)"],
+                    [0.6, f"rgba({r},{g},{b},0.12)"],
+                    [1.0, f"rgba({r},{g},{b},0.26)"],
                 ],
             }
         },
         "axisTick": {"show": False},
         "splitLine": {"length": 10, "lineStyle": {"width": 2, "color": "#999"}},
         "axisLabel": {"show": False},
-        "anchor": {"show": True, "showAbove": True, "size": 8, "itemStyle": {"color": "#fff"}},
+        "anchor": {
+            "show": True,
+            "showAbove": True,
+            "size": 8,
+            "itemStyle": {"color": "#fff"},
+        },
         "pointer": {"length": "60%", "width": 4, "itemStyle": {"color": color}},
         "title": {"show": False},
         "detail": {
-            "valueAnimation": False,  # no number animation
+            "valueAnimation": False,
             "offsetCenter": [0, "60%"],
             "fontSize": 16,
             "fontWeight": "bold",
-            "formatter": JsCode("function(v){return Number(v).toFixed(1);}").js_code,
+            "formatter": JsCode(
+                "function(v){return Number(v).toFixed(1);}"
+            ).js_code,
             "color": "#333",
         },
         "data": [{"value": v, "name": title}],
     }
 
     option = {
-        "title": {"text": title, "left": "center", "top": 0, "textStyle": {"fontSize": 12}},
+        "title": {
+            "text": title,
+            "left": "center",
+            "top": 0,
+            "textStyle": {"fontSize": 12},
+        },
         "tooltip": {"show": False},
         "series": [main_series],
-        "animation": True,  # gauge pointer motion smooth, but no numeric flicker
+        "animation": True,
         "useDirtyRect": True,
     }
     return option
@@ -1287,7 +1458,8 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[0]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">🚀 Speed (km/h)</div>',
+            '<div class="gauge-container"><div class="gauge-title">'
+            "🚀 Speed (km/h)</div>",
             unsafe_allow_html=True,
         )
         opt = create_small_gauge_option(
@@ -1302,7 +1474,8 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[1]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">🔋 Battery (%)</div>',
+            '<div class="gauge-container"><div class="gauge-title">'
+            "🔋 Battery (%)</div>",
             unsafe_allow_html=True,
         )
         opt = create_small_gauge_option(
@@ -1313,19 +1486,24 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[2]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">💡 Avg Power (W)</div>',
+            '<div class="gauge-container"><div class="gauge-title">'
+            "💡 Avg Power (W)</div>",
             unsafe_allow_html=True,
         )
         opt = create_small_gauge_option(
-            kpis["avg_power_w"], max_val=max(1000, kpis["avg_power_w"] * 2 + 1), title="Power",
-            color_hex="#ff7f0e", suffix=""
+            kpis["avg_power_w"],
+            max_val=max(1000, kpis["avg_power_w"] * 2 + 1),
+            title="Power",
+            color_hex="#ff7f0e",
+            suffix="",
         )
         _st_echarts_render(opt, 140, key=f"{unique_ns}_gauge_power")
         st.markdown("</div>", unsafe_allow_html=True)
 
     with cols[3]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">♻️ Efficiency (km/kWh)</div>',
+            '<div class="gauge-container"><div class="gauge-title">'
+            "♻️ Efficiency (km/kWh)</div>",
             unsafe_allow_html=True,
         )
         eff_val = kpis["efficiency_km_per_kwh"]
@@ -1341,7 +1519,8 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[4]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">🔄 Roll (°)</div>',
+            '<div class="gauge-container"><div class="gauge-title">'
+            "🔄 Roll (°)</div>",
             unsafe_allow_html=True,
         )
         roll_max = (
@@ -1357,7 +1536,8 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[5]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">📐 Pitch (°)</div>',
+            '<div class="gauge-container"><div class="gauge-title">'
+            "📐 Pitch (°)</div>",
             unsafe_allow_html=True,
         )
         pitch_max = (
@@ -1374,7 +1554,9 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def render_kpi_header(kpis: Dict[str, float], unique_ns: str = "kpiheader", show_gauges: bool = True):
+def render_kpi_header(
+    kpis: Dict[str, float], unique_ns: str = "kpiheader", show_gauges: bool = True
+):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -1401,9 +1583,18 @@ def render_kpi_header(kpis: Dict[str, float], unique_ns: str = "kpiheader", show
 # Charts (ECharts)
 # ---------------------------
 
-def _add_datazoom(opt: Dict[str, Any], x_indices: List[int], y_indices: Optional[List[int]] = None):
+def _add_datazoom(
+    opt: Dict[str, Any], x_indices: List[int], y_indices: Optional[List[int]] = None
+):
     dz = [
-        {"type": "inside", "xAxisIndex": x_indices, "filterMode": "none", "zoomOnMouseWheel": True, "moveOnMouseMove": True, "moveOnMouseWheel": True},
+        {
+            "type": "inside",
+            "xAxisIndex": x_indices,
+            "filterMode": "none",
+            "zoomOnMouseWheel": True,
+            "moveOnMouseMove": True,
+            "moveOnMouseWheel": True,
+        },
         {"type": "slider", "xAxisIndex": x_indices, "height": 14, "bottom": 6},
     ]
     if y_indices is not None:
@@ -1411,6 +1602,7 @@ def _add_datazoom(opt: Dict[str, Any], x_indices: List[int], y_indices: Optional
         dz.append({"type": "inside", "yAxisIndex": y_indices})
     opt["dataZoom"] = dz
     return opt
+
 
 def create_speed_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     if df.empty or "speed_ms" not in df.columns:
@@ -1440,26 +1632,47 @@ def create_speed_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     )
     return _add_datazoom(opt, x_indices=[0])
 
+
 def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"voltage_v", "current_a", "power_w"}
     if df.empty or not need.issubset(df.columns):
         return {"title": {"text": "No power data available"}, "animation": True}
 
     ts = _ts_to_iso_list(df["timestamp"])
-    volt = [ _num_or_none(v) for v in pd.to_numeric(df["voltage_v"], errors="coerce") ]
-    curr = [ _num_or_none(v) for v in pd.to_numeric(df["current_a"], errors="coerce") ]
-    pwr  = [ _num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce") ]
+    volt = [
+        _num_or_none(v) for v in pd.to_numeric(df["voltage_v"], errors="coerce")
+    ]
+    curr = [
+        _num_or_none(v) for v in pd.to_numeric(df["current_a"], errors="coerce")
+    ]
+    pwr = [_num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce")]
 
     src_top = [[t, v, c] for t, v, c in zip(ts, volt, curr)]
     src_bot = [[t, w] for t, w in zip(ts, pwr)]
 
     opt = {
-        "title": {"text": "⚡ Electrical System Performance", "left": "center", "top": 6},
+        "title": {
+            "text": "⚡ Electrical System Performance",
+            "left": "center",
+            "top": 6,
+        },
         "tooltip": {"trigger": "axis"},
         "legend": {"top": 28},
         "grid": [
-            {"left": "6%", "right": "4%", "top": 60, "height": 180, "containLabel": True},
-            {"left": "6%", "right": "4%", "top": 280, "height": 180, "containLabel": True},
+            {
+                "left": "6%",
+                "right": "4%",
+                "top": 60,
+                "height": 180,
+                "containLabel": True,
+            },
+            {
+                "left": "6%",
+                "right": "4%",
+                "top": 280,
+                "height": 180,
+                "containLabel": True,
+            },
         ],
         "xAxis": [{"type": "time", "gridIndex": 0}, {"type": "time", "gridIndex": 1}],
         "yAxis": [
@@ -1468,20 +1681,48 @@ def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         ],
         "dataset": [{"id": "top", "source": src_top}, {"id": "bot", "source": src_bot}],
         "series": [
-            {"type": "line", "datasetId": "top", "name": "Voltage (V)", "encode": {"x": 0, "y": 1},
-             "showSymbol": False, "lineStyle": {"width": 2, "color": "#2ca02c"},
-             "sampling": "lttb", "xAxisIndex": 0, "yAxisIndex": 0, "smooth": True},
-            {"type": "line", "datasetId": "top", "name": "Current (A)", "encode": {"x": 0, "y": 2},
-             "showSymbol": False, "lineStyle": {"width": 2, "color": "#d62728"},
-             "sampling": "lttb", "xAxisIndex": 0, "yAxisIndex": 0, "smooth": True},
-            {"type": "line", "datasetId": "bot", "name": "Power (W)", "encode": {"x": 0, "y": 1},
-             "showSymbol": False, "lineStyle": {"width": 2, "color": "#ff7f0e"},
-             "sampling": "lttb", "xAxisIndex": 1, "yAxisIndex": 1, "smooth": True},
+            {
+                "type": "line",
+                "datasetId": "top",
+                "name": "Voltage (V)",
+                "encode": {"x": 0, "y": 1},
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#2ca02c"},
+                "sampling": "lttb",
+                "xAxisIndex": 0,
+                "yAxisIndex": 0,
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "top",
+                "name": "Current (A)",
+                "encode": {"x": 0, "y": 2},
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#d62728"},
+                "sampling": "lttb",
+                "xAxisIndex": 0,
+                "yAxisIndex": 0,
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "bot",
+                "name": "Power (W)",
+                "encode": {"x": 0, "y": 1},
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#ff7f0e"},
+                "sampling": "lttb",
+                "xAxisIndex": 1,
+                "yAxisIndex": 1,
+                "smooth": True,
+            },
         ],
         "animation": True,
         "useDirtyRect": True,
     }
-    return _add_datazoom(opt, x_indices=[0,1])
+    return _add_datazoom(opt, x_indices=[0, 1])
+
 
 def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"gyro_x", "gyro_y", "gyro_z", "accel_x", "accel_y", "accel_z"}
@@ -1492,24 +1733,48 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     ts = _ts_to_iso_list(df2["timestamp"])
 
     def col(v):
-        return [ _num_or_none(x) for x in pd.to_numeric(df2[v], errors="coerce") ]
+        return [
+            _num_or_none(x) for x in pd.to_numeric(df2[v], errors="coerce")
+        ]
 
     gx, gy, gz = col("gyro_x"), col("gyro_y"), col("gyro_z")
     ax, ay, az = col("accel_x"), col("accel_y"), col("accel_z")
     roll, pitch = col("roll_deg"), col("pitch_deg")
 
     src_gyro = [[t, a, b, c] for t, a, b, c in zip(ts, gx, gy, gz)]
-    src_acc  = [[t, a, b, c] for t, a, b, c in zip(ts, ax, ay, az)]
-    src_rp   = [[t, r, p]     for t, r, p     in zip(ts, roll, pitch)]
+    src_acc = [[t, a, b, c] for t, a, b, c in zip(ts, ax, ay, az)]
+    src_rp = [[t, r, p] for t, r, p in zip(ts, roll, pitch)]
 
     opt = {
-        "title": {"text": "⚡ IMU System Performance with Roll & Pitch", "left":"center","top":6},
+        "title": {
+            "text": "⚡ IMU System Performance with Roll & Pitch",
+            "left": "center",
+            "top": 6,
+        },
         "tooltip": {"trigger": "axis"},
         "legend": {"top": 28},
         "grid": [
-            {"left": "6%", "right": "4%", "top": 60, "height": 160, "containLabel": True},
-            {"left": "6%", "right": "4%", "top": 250, "height": 160, "containLabel": True},
-            {"left": "6%", "right": "4%", "top": 440, "height": 160, "containLabel": True},
+            {
+                "left": "6%",
+                "right": "4%",
+                "top": 60,
+                "height": 160,
+                "containLabel": True,
+            },
+            {
+                "left": "6%",
+                "right": "4%",
+                "top": 250,
+                "height": 160,
+                "containLabel": True,
+            },
+            {
+                "left": "6%",
+                "right": "4%",
+                "top": 440,
+                "height": 160,
+                "containLabel": True,
+            },
         ],
         "xAxis": [{"type": "time", "gridIndex": i} for i in range(3)],
         "yAxis": [
@@ -1523,36 +1788,109 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             {"id": "rp", "source": src_rp},
         ],
         "series": [
-            {"type": "line", "datasetId": "gyro", "name": "Gyro X", "encode": {"x": 0, "y": 1},
-             "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False, "lineStyle": {"width": 2, "color": "#e74c3c"},
-             "sampling": "lttb", "smooth": True},
-            {"type": "line", "datasetId": "gyro", "name": "Gyro Y", "encode": {"x": 0, "y": 2},
-             "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False, "lineStyle": {"width": 2, "color": "#2ecc71"},
-             "sampling": "lttb", "smooth": True},
-            {"type": "line", "datasetId": "gyro", "name": "Gyro Z", "encode": {"x": 0, "y": 3},
-             "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False, "lineStyle": {"width": 2, "color": "#3498db"},
-             "sampling": "lttb", "smooth": True},
-            {"type": "line", "datasetId": "acc", "name": "Accel X", "encode": {"x": 0, "y": 1},
-             "xAxisIndex": 1, "yAxisIndex": 1, "showSymbol": False, "lineStyle": {"width": 2, "color": "#f39c12"},
-             "sampling": "lttb", "smooth": True},
-            {"type": "line", "datasetId": "acc", "name": "Accel Y", "encode": {"x": 0, "y": 2},
-             "xAxisIndex": 1, "yAxisIndex": 1, "showSymbol": False, "lineStyle": {"width": 2, "color": "#9b59b6"},
-             "sampling": "lttb", "smooth": True},
-            {"type": "line", "datasetId": "acc", "name": "Accel Z", "encode": {"x": 0, "y": 3},
-             "xAxisIndex": 1, "yAxisIndex": 1, "showSymbol": False, "lineStyle": {"width": 2, "color": "#34495e"},
-             "sampling": "lttb", "smooth": True},
-            {"type": "line", "datasetId": "rp", "name": "Roll (°)", "encode": {"x": 0, "y": 1},
-             "xAxisIndex": 2, "yAxisIndex": 2, "showSymbol": False, "lineStyle": {"width": 3, "color": "#e377c2"},
-             "sampling": "lttb", "smooth": True},
-            {"type": "line", "datasetId": "rp", "name": "Pitch (°)", "encode": {"x": 0, "y": 2},
-             "xAxisIndex": 2, "yAxisIndex": 2, "showSymbol": False, "lineStyle": {"width": 3, "color": "#17becf"},
-             "sampling": "lttb", "smooth": True},
+            {
+                "type": "line",
+                "datasetId": "gyro",
+                "name": "Gyro X",
+                "encode": {"x": 0, "y": 1},
+                "xAxisIndex": 0,
+                "yAxisIndex": 0,
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#e74c3c"},
+                "sampling": "lttb",
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "gyro",
+                "name": "Gyro Y",
+                "encode": {"x": 0, "y": 2},
+                "xAxisIndex": 0,
+                "yAxisIndex": 0,
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#2ecc71"},
+                "sampling": "lttb",
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "gyro",
+                "name": "Gyro Z",
+                "encode": {"x": 0, "y": 3},
+                "xAxisIndex": 0,
+                "yAxisIndex": 0,
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#3498db"},
+                "sampling": "lttb",
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "acc",
+                "name": "Accel X",
+                "encode": {"x": 0, "y": 1},
+                "xAxisIndex": 1,
+                "yAxisIndex": 1,
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#f39c12"},
+                "sampling": "lttb",
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "acc",
+                "name": "Accel Y",
+                "encode": {"x": 0, "y": 2},
+                "xAxisIndex": 1,
+                "yAxisIndex": 1,
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#9b59b6"},
+                "sampling": "lttb",
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "acc",
+                "name": "Accel Z",
+                "encode": {"x": 0, "y": 3},
+                "xAxisIndex": 1,
+                "yAxisIndex": 1,
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#34495e"},
+                "sampling": "lttb",
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "rp",
+                "name": "Roll (°)",
+                "encode": {"x": 0, "y": 1},
+                "xAxisIndex": 2,
+                "yAxisIndex": 2,
+                "showSymbol": False,
+                "lineStyle": {"width": 3, "color": "#e377c2"},
+                "sampling": "lttb",
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "rp",
+                "name": "Pitch (°)",
+                "encode": {"x": 0, "y": 2},
+                "xAxisIndex": 2,
+                "yAxisIndex": 2,
+                "showSymbol": False,
+                "lineStyle": {"width": 3, "color": "#17becf"},
+                "sampling": "lttb",
+                "smooth": True,
+            },
         ],
         "axisPointer": {"link": [{"xAxisIndex": "all"}]},
         "animation": True,
         "useDirtyRect": True,
     }
-    return _add_datazoom(opt, x_indices=[0,1,2])
+    return _add_datazoom(opt, x_indices=[0, 1, 2])
+
 
 def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"gyro_x", "gyro_y", "gyro_z", "accel_x", "accel_y", "accel_z"}
@@ -1563,7 +1901,12 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     ts = _ts_to_iso_list(df2["timestamp"])
 
     def col(v):
-        return pd.to_numeric(df2[v], errors="coerce").fillna(np.nan).astype(float).tolist()
+        return (
+            pd.to_numeric(df2[v], errors="coerce")
+            .fillna(np.nan)
+            .astype(float)
+            .tolist()
+        )
 
     gx, gy, gz = col("gyro_x"), col("gyro_y"), col("gyro_z")
     ax, ay, az = col("accel_x"), col("accel_y"), col("accel_z")
@@ -1594,36 +1937,81 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             y_axes.append({"type": "value", "gridIndex": grid_idx})
             grid_idx += 1
 
-    # series mapping
-    colors = ["#e74c3c","#2ecc71","#3498db","#f39c12","#9b59b6","#34495e","#e377c2","#17becf"]
-    names  = ["Gyro X","Gyro Y","Gyro Z","Accel X","Accel Y","Accel Z","Roll","Pitch"]
+    colors = [
+        "#e74c3c",
+        "#2ecc71",
+        "#3498db",
+        "#f39c12",
+        "#9b59b6",
+        "#34495e",
+        "#e377c2",
+        "#17becf",
+    ]
+    names = [
+        "Gyro X",
+        "Gyro Y",
+        "Gyro Z",
+        "Accel X",
+        "Accel Y",
+        "Accel Z",
+        "Roll",
+        "Pitch",
+    ]
 
     dataset_source = [
         [t, gx[i], gy[i], gz[i], ax[i], ay[i], az[i], roll[i], pitch[i]]
         for i, t in enumerate(ts)
     ]
 
-    # 0..7 single series, 8 combined (roll & pitch)
     for i in range(9):
         if i == 8:
-            series.append({
-                "type":"line","name":"Roll","encode":{"x":0,"y":7},"xAxisIndex":i,"yAxisIndex":i,
-                "showSymbol":False,"lineStyle":{"width":2,"color":"#e377c2"},"sampling":"lttb","smooth":True
-            })
-            series.append({
-                "type":"line","name":"Pitch","encode":{"x":0,"y":8},"xAxisIndex":i,"yAxisIndex":i,
-                "showSymbol":False,"lineStyle":{"width":2,"color":"#17becf"},"sampling":"lttb","smooth":True
-            })
+            series.append(
+                {
+                    "type": "line",
+                    "name": "Roll",
+                    "encode": {"x": 0, "y": 7},
+                    "xAxisIndex": i,
+                    "yAxisIndex": i,
+                    "showSymbol": False,
+                    "lineStyle": {"width": 2, "color": "#e377c2"},
+                    "sampling": "lttb",
+                    "smooth": True,
+                }
+            )
+            series.append(
+                {
+                    "type": "line",
+                    "name": "Pitch",
+                    "encode": {"x": 0, "y": 8},
+                    "xAxisIndex": i,
+                    "yAxisIndex": i,
+                    "showSymbol": False,
+                    "lineStyle": {"width": 2, "color": "#17becf"},
+                    "sampling": "lttb",
+                    "smooth": True,
+                }
+            )
         else:
-            series.append({
-                "type":"line", "name": names[i], "encode":{"x":0,"y":i+1},
-                "xAxisIndex":i,"yAxisIndex":i,"showSymbol":False,
-                "lineStyle":{"width":2,"color":colors[i]},
-                "sampling":"lttb","smooth":True
-            })
+            series.append(
+                {
+                    "type": "line",
+                    "name": names[i],
+                    "encode": {"x": 0, "y": i + 1},
+                    "xAxisIndex": i,
+                    "yAxisIndex": i,
+                    "showSymbol": False,
+                    "lineStyle": {"width": 2, "color": colors[i]},
+                    "sampling": "lttb",
+                    "smooth": True,
+                }
+            )
 
     opt = {
-        "title": {"text": "🎮 Detailed IMU Sensor Analysis with Roll & Pitch", "left":"center","top":6},
+        "title": {
+            "text": "🎮 Detailed IMU Sensor Analysis with Roll & Pitch",
+            "left": "center",
+            "top": 6,
+        },
         "tooltip": {"trigger": "axis"},
         "dataset": {"source": dataset_source},
         "grid": grids,
@@ -1639,15 +2027,22 @@ def create_imu_detail_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     }
     return _add_datazoom(opt, x_indices=list(range(9)))
 
+
 def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"speed_ms", "power_w"}
     if df.empty or not need.issubset(df.columns):
         return {"title": {"text": "No efficiency data available"}, "animation": True}
 
-    spd = [ _num_or_none(v) for v in pd.to_numeric(df["speed_ms"], errors="coerce") ]
-    pwr = [ _num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce") ]
-    volt_raw = pd.to_numeric(df.get("voltage_v", pd.Series([None] * len(df))), errors="coerce")
-    volt = [ _num_or_none(v) for v in volt_raw ]
+    spd = [
+        _num_or_none(v) for v in pd.to_numeric(df["speed_ms"], errors="coerce")
+    ]
+    pwr = [
+        _num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce")
+    ]
+    volt_raw = pd.to_numeric(
+        df.get("voltage_v", pd.Series([None] * len(df))), errors="coerce"
+    )
+    volt = [_num_or_none(v) for v in volt_raw]
 
     src = [[spd[i], pwr[i], volt[i]] for i in range(len(spd))]
     v_non_none = [v for v in volt if v is not None]
@@ -1656,16 +2051,28 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     vmax = max(v_non_none) if vm_show else 1
 
     opt = {
-        "title": {"text": "⚡ Efficiency Analysis: Speed vs Power Consumption", "left":"center","top":6},
+        "title": {
+            "text": "⚡ Efficiency Analysis: Speed vs Power Consumption",
+            "left": "center",
+            "top": 6,
+        },
         "tooltip": {
             "trigger": "item",
             "formatter": JsCode(
-                "function(p){return 'Speed: ' + (p.value[0]==null?'N/A':p.value[0].toFixed(2)) + ' m/s<br/>' +"
-                "'Power: ' + (p.value[1]==null?'N/A':p.value[1].toFixed(1)) + ' W' +"
-                "(p.value[2]==null ? '' : '<br/>Voltage: ' + p.value[2].toFixed(1) + ' V');}"
+                "function(p){return 'Speed: ' + "
+                "(p.value[0]==null?'N/A':p.value[0].toFixed(2)) + ' m/s<br/>' +"
+                "'Power: ' + (p.value[1]==null?'N/A':p.value[1].toFixed(1)) + ' W'"
+                "+ (p.value[2]==null ? '' : '<br/>Voltage: ' + "
+                "p.value[2].toFixed(1) + ' V');}"
             ).js_code,
         },
-        "grid": {"left": "6%", "right": "6%", "top": 60, "bottom": 50, "containLabel": True},
+        "grid": {
+            "left": "6%",
+            "right": "6%",
+            "top": 60,
+            "bottom": 50,
+            "containLabel": True,
+        },
         "xAxis": {"type": "value", "name": "Speed (m/s)"},
         "yAxis": {"type": "value", "name": "Power (W)"},
         "visualMap": {
@@ -1673,13 +2080,22 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
             "min": vmin,
             "max": vmax,
             "dimension": 2,
-            "inRange": {"color": ["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"]},
+            "inRange": {
+                "color": ["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"]
+            },
             "right": 5,
             "top": "middle",
             "calculable": True,
             "show": vm_show,
         },
-        "series": [{"type": "scatter", "symbolSize": 6, "encode": {"x": 0, "y": 1}, "itemStyle": {"opacity": 0.85}}],
+        "series": [
+            {
+                "type": "scatter",
+                "symbolSize": 6,
+                "encode": {"x": 0, "y": 1},
+                "itemStyle": {"opacity": 0.85},
+            }
+        ],
         "dataset": {"source": src},
         "animation": True,
         "useDirtyRect": True,
@@ -1695,7 +2111,9 @@ def get_available_columns(df: pd.DataFrame) -> List[str]:
     return [col for col in numeric_columns if col not in exclude_cols]
 
 
-def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) -> Dict[str, Any]:
+def create_dynamic_chart_option(
+    df: pd.DataFrame, chart_config: Dict[str, Any]
+) -> Dict[str, Any]:
     if df.empty:
         return {"title": {"text": "No data available"}, "animation": True}
 
@@ -1707,7 +2125,10 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
     if chart_type == "heatmap":
         numeric_cols = get_available_columns(df)
         if len(numeric_cols) < 2:
-            return {"title": {"text": "Need at least 2 numeric columns"}, "animation": True}
+            return {
+                "title": {"text": "Need at least 2 numeric columns"},
+                "animation": True,
+            }
         corr = df[numeric_cols].corr()
         xcats = list(corr.columns)
         ycats = list(corr.index)
@@ -1717,11 +2138,26 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
                 data.append([j, i, float(corr.loc[yc, xc])])
 
         opt = {
-            "title": {"text": "🔥 Correlation Heatmap", "left":"center","top":6},
+            "title": {"text": "🔥 Correlation Heatmap", "left": "center", "top": 6},
             "tooltip": {"position": "top"},
-            "grid": {"left": "8%", "right": "8%", "top": 60, "bottom": 40, "containLabel": True},
-            "xAxis": {"type": "category", "data": xcats, "splitArea": {"show": True}, "axisLabel": {"rotate": 40}},
-            "yAxis": {"type": "category", "data": ycats, "splitArea": {"show": True}},
+            "grid": {
+                "left": "8%",
+                "right": "8%",
+                "top": 60,
+                "bottom": 40,
+                "containLabel": True,
+            },
+            "xAxis": {
+                "type": "category",
+                "data": xcats,
+                "splitArea": {"show": True},
+                "axisLabel": {"rotate": 40},
+            },
+            "yAxis": {
+                "type": "category",
+                "data": ycats,
+                "splitArea": {"show": True},
+            },
             "visualMap": {
                 "min": -1,
                 "max": 1,
@@ -1731,29 +2167,51 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
                 "bottom": 0,
                 "inRange": {"color": ["#67001f", "#f7f7f7", "#053061"]},
             },
-            "series": [{"name": "corr", "type": "heatmap", "data": data, "label": {"show": False}}],
+            "series": [
+                {
+                    "name": "corr",
+                    "type": "heatmap",
+                    "data": data,
+                    "label": {"show": False},
+                }
+            ],
             "animation": True,
             "useDirtyRect": True,
         }
         return opt
 
     if not y_col or y_col not in df.columns:
-        return {"title": {"text": "Invalid Y-axis selection"}, "animation": True}
+        return {
+            "title": {"text": "Invalid Y-axis selection"},
+            "animation": True,
+        }
 
     if chart_type != "histogram" and (x_col not in df.columns):
-        return {"title": {"text": "Invalid X-axis selection"}, "animation": True}
+        return {
+            "title": {"text": "Invalid X-axis selection"},
+            "animation": True,
+        }
 
     if chart_type == "histogram":
         vals = pd.to_numeric(df[y_col], errors="coerce").dropna().astype(float)
         if vals.empty:
-            return {"title": {"text": f"No numeric data in {y_col}"}, "animation": True}
+            return {
+                "title": {"text": f"No numeric data in {y_col}"},
+                "animation": True,
+            }
         hist, edges = np.histogram(vals, bins=30)
         centers = (edges[:-1] + edges[1:]) / 2.0
         src = [[float(centers[i]), int(hist[i])] for i in range(len(hist))]
         opt = {
-            "title": {"text": f"Distribution of {y_col}", "left":"center","top":6},
+            "title": {"text": f"Distribution of {y_col}", "left": "center", "top": 6},
             "tooltip": {"trigger": "axis"},
-            "grid": {"left": "6%", "right": "6%", "top": 60, "bottom": 40, "containLabel": True},
+            "grid": {
+                "left": "6%",
+                "right": "6%",
+                "top": 60,
+                "bottom": 40,
+                "containLabel": True,
+            },
             "xAxis": {"type": "value", "name": y_col},
             "yAxis": {"type": "value", "name": "Count"},
             "series": [{"type": "bar", "data": src, "barWidth": "70%"}],
@@ -1774,7 +2232,11 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
     y_axis = {"type": "value", "name": y_col}
 
     series_def = {
-        "type": "line" if chart_type == "line" else "scatter" if chart_type == "scatter" else "bar",
+        "type": "line"
+        if chart_type == "line"
+        else "scatter"
+        if chart_type == "scatter"
+        else "bar",
         "encode": {"x": 0, "y": 1},
         "showSymbol": chart_type != "bar",
         "lineStyle": {"width": 2} if chart_type in ("line",) else None,
@@ -1784,9 +2246,17 @@ def create_dynamic_chart_option(df: pd.DataFrame, chart_config: Dict[str, Any]) 
     }
 
     opt = {
-        "title": {"text": title, "left":"center","top":6},
-        "tooltip": {"trigger": "axis" if chart_type in ("line", "bar") else "item"},
-        "grid": {"left": "6%", "right": "6%", "top": 60, "bottom": 40, "containLabel": True},
+        "title": {"text": title, "left": "center", "top": 6},
+        "tooltip": {
+            "trigger": "axis" if chart_type in ("line", "bar") else "item"
+        },
+        "grid": {
+            "left": "6%",
+            "right": "6%",
+            "top": 60,
+            "bottom": 40,
+            "containLabel": True,
+        },
         "xAxis": x_axis,
         "yAxis": y_axis,
         "dataset": {"source": src},
@@ -1848,8 +2318,9 @@ def analyze_data_quality(df: pd.DataFrame, is_realtime: bool):
 
             if time_since_last > threshold:
                 notifications.append(
-                    f"🚨 **Data Stream Stalled:** No new data received for {int(time_since_last)}s. "
-                    f"The data bridge might be disconnected. (Expected update every ~{avg_rate:.1f}s)"
+                    f"🚨 **Data Stream Stalled:** No new data received for "
+                    f"{int(time_since_last)}s. The data bridge might be "
+                    f"disconnected. (Expected update every ~{avg_rate:.1f}s)"
                 )
         except Exception as e:
             logger.warning(f"Could not perform stale data check: {e}")
@@ -1892,8 +2363,9 @@ def analyze_data_quality(df: pd.DataFrame, is_realtime: bool):
     if all_sensors_failing and len(failing_sensors) > 3:
         notifications.append(
             "🚨 **Critical Alert:** Multiple sensors (including "
-            f"{', '.join(failing_sensors[:3])}...) are reporting static or zero values. "
-            "This could indicate a major issue with the data bridge or power."
+            f"{', '.join(failing_sensors[:3])}...) are reporting static or "
+            "zero values. This could indicate a major issue with the data "
+            "bridge or power."
         )
     elif failing_sensors:
         sensor_list = ", ".join(failing_sensors)
@@ -1906,6 +2378,34 @@ def analyze_data_quality(df: pd.DataFrame, is_realtime: bool):
 
 
 # -------- Plotly GPS (OpenStreetMap / Maplibre) --------
+
+def _compute_center_and_zoom_for_mapbox(
+    lats: List[float], lons: List[float]
+) -> Tuple[Dict[str, float], float]:
+    """
+    Approximate center/zoom for Mapbox fallback using ranges and
+    a log-scale zoom heuristic. Clamped to reasonable bounds.
+    References: community formulas/log approach
+    """
+    lat_min, lat_max = float(np.min(lats)), float(np.max(lats))
+    lon_min, lon_max = float(np.min(lons)), float(np.max(lons))
+    center = {"lat": (lat_min + lat_max) / 2.0, "lon": (lon_min + lon_max) / 2.0}
+
+    # Convert degree ranges to km (approx), accounting for latitude
+    mean_lat_rad = math.radians(center["lat"])
+    lat_km_per_deg = 110.574  # approx
+    lon_km_per_deg = 111.320 * math.cos(mean_lat_rad)  # varies with latitude
+
+    dlat_km = max(0.001, (lat_max - lat_min) * lat_km_per_deg)
+    dlon_km = max(0.001, (lon_max - lon_min) * lon_km_per_deg)
+    span_km = max(dlat_km, dlon_km)
+
+    # Heuristic: zoom ≈ 11.5 - ln(span_km)
+    # Tune and clamp
+    zoom = 11.5 - math.log(span_km)
+    zoom = float(np.clip(zoom, 2.0, 16.0))
+    return center, zoom
+
 
 def render_gps_map_plotly(df: pd.DataFrame):
     if df is None or df.empty:
@@ -1951,7 +2451,14 @@ def render_gps_map_plotly(df: pd.DataFrame):
     # Optional coloring
     speed_col = "speed_ms" if "speed_ms" in df_filtered.columns else None
 
-    # px.scatter_map (Maplibre, no token) – fallback to scatter_mapbox if older Plotly
+    lats = df_filtered["lat"].tolist()
+    lons = df_filtered["lon"].tolist()
+    lat_min, lat_max = min(lats), max(lats)
+    lon_min, lon_max = min(lons), max(lons)
+    center_lat = (lat_min + lat_max) / 2.0
+    center_lon = (lon_min + lon_max) / 2.0
+
+    # Preferred Maplibre trace (px.scatter_map). It supports map bounds.
     try:
         fig = px.scatter_map(
             df_filtered,
@@ -1959,67 +2466,59 @@ def render_gps_map_plotly(df: pd.DataFrame):
             lon="lon",
             color=speed_col,
             color_continuous_scale="Turbo",
-            hover_data=[c for c in ["timestamp", "power_w", "current_a", "voltage_v"] if c in df_filtered.columns],
-            # initial zoom will be overridden by bounds below
-            zoom=8,
+            hover_data=[
+                c
+                for c in ["timestamp", "power_w", "current_a", "voltage_v"]
+                if c in df_filtered.columns
+            ],
             height=520,
+            map_style="open-street-map",
         )
-        fig.update_layout(map_style="open-street-map")
-
-        # Auto-fit to data bounds (Maplibre traces support layout.map.bounds)
-        lat_min, lat_max = float(df_filtered["lat"].min()), float(df_filtered["lat"].max())
-        lon_min, lon_max = float(df_filtered["lon"].min()), float(df_filtered["lon"].max())
-        # Expand tiny boxes a bit
-        if lat_max - lat_min < 0.0005:
-            pad = 0.001
-            lat_min -= pad; lat_max += pad
-        if lon_max - lon_min < 0.0005:
-            pad = 0.001
-            lon_min -= pad; lon_max += pad
-        # Apply bounds for auto-zoom/center
-        fig.update_layout(map=dict(bounds=dict(west=lon_min, east=lon_max, south=lat_min, north=lat_max)))
+        # Fit to bounds for best visibility
+        fig.update_layout(
+            map=dict(
+                bounds=dict(
+                    west=lon_min, east=lon_max, south=lat_min, north=lat_max
+                ),
+                center=dict(lat=center_lat, lon=center_lon),
+            )
+        )
+        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, uirevision="gps-map")
+        st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True})
     except Exception:
-        # Fallback
+        # Fallback to Mapbox (deprecated in newer Plotly, but kept as fallback)
+        # Compute approximate center/zoom
+        center, zoom = _compute_center_and_zoom_for_mapbox(lats, lons)
         fig = px.scatter_mapbox(
             df_filtered,
             lat="lat",
             lon="lon",
             color=speed_col,
             color_continuous_scale="Turbo",
-            hover_data=[c for c in ["timestamp", "power_w", "current_a", "voltage_v"] if c in df_filtered.columns],
-            zoom=8,
+            hover_data=[
+                c
+                for c in ["timestamp", "power_w", "current_a", "voltage_v"]
+                if c in df_filtered.columns
+            ],
             height=520,
+            zoom=zoom,
+            center=center,
         )
         fig.update_layout(mapbox_style="open-street-map")
-        # Heuristic center + zoom for Mapbox fallback
-        try:
-            lat_min, lat_max = float(df_filtered["lat"].min()), float(df_filtered["lat"].max())
-            lon_min, lon_max = float(df_filtered["lon"].min()), float(df_filtered["lon"].max())
-            center_lat = (lat_min + lat_max) / 2.0
-            center_lon = (lon_min + lon_max) / 2.0
-            # simple span->zoom heuristic
-            span = max(lat_max - lat_min, lon_max - lon_min)
-            if span <= 0.001: zoom = 16
-            elif span <= 0.01: zoom = 13
-            elif span <= 0.05: zoom = 11
-            elif span <= 0.1: zoom = 10
-            elif span <= 0.5: zoom = 9
-            elif span <= 1.0: zoom = 8
-            elif span <= 5.0: zoom = 6
-            elif span <= 10.0: zoom = 5
-            elif span <= 25.0: zoom = 4
-            else: zoom = 3
-            fig.update_layout(mapbox=dict(center=dict(lat=center_lat, lon=center_lon), zoom=zoom))
-        except Exception:
-            pass
-
-    # Keep user zoom/position across reruns
-    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, uirevision="gps-map")
-
-    st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True})
+        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, uirevision="gps-map")
+        st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True})
 
 
 # -------- Data Quality Report (Data tab) --------
+
+def _format_span_hms(delta: timedelta) -> str:
+    total_s = int(max(0, delta.total_seconds()))
+    h = total_s // 3600
+    m = (total_s % 3600) // 60
+    s = total_s % 60
+    # Always HH:MM:SS, even for multi-day durations
+    return f"{h}h {m}m {s}s"
+
 
 def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
     report: Dict[str, Any] = {}
@@ -2035,13 +2534,14 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
                 report["median_dt_s"] = float(dt.median())
                 report["hz"] = 1.0 / report["median_dt_s"]
                 gaps = dt[dt > 3 * dt.median()]
-                report["dropouts"] = int((gaps).sum() // report["median_dt_s"]) if not gaps.empty else 0
+                report["dropouts"] = (
+                    int((gaps).sum() // report["median_dt_s"])
+                    if not gaps.empty
+                    else 0
+                )
                 report["max_gap_s"] = float(dt.max())
-                # Format span as H:MM:SS (no "days") to ensure it fits the metric box
-                total_seconds = int((ts.max() - ts.min()).total_seconds())
-                hours, rem = divmod(total_seconds, 3600)
-                minutes, seconds = divmod(rem, 60)
-                report["span"] = f"{hours:d}:{minutes:02d}:{seconds:02d}"
+                # Fit span only as HH:MM:SS (no 'days' string)
+                report["span"] = _format_span_hms(ts.max() - ts.min())
             else:
                 report["median_dt_s"] = None
                 report["hz"] = None
@@ -2055,15 +2555,27 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
             report["max_gap_s"] = None
             report["span"] = None
 
-    # Missingness for key fields
-    key_cols = [c for c in ["speed_ms","power_w","voltage_v","current_a","latitude","longitude","altitude"] if c in df.columns]
+    key_cols = [
+        c
+        for c in [
+            "speed_ms",
+            "power_w",
+            "voltage_v",
+            "current_a",
+            "latitude",
+            "longitude",
+            "altitude",
+        ]
+        if c in df.columns
+    ]
     miss = {}
     for c in key_cols:
         miss[c] = float(df[c].isna().mean()) if c in df.columns else 1.0
     report["missing_rates"] = miss
 
-    # Outliers via simple z-score (>4)
-    outlier_cols = [c for c in ["speed_ms","power_w","voltage_v","current_a"] if c in df.columns]
+    outlier_cols = [
+        c for c in ["speed_ms", "power_w", "voltage_v", "current_a"] if c in df.columns
+    ]
     outliers = {}
     for c in outlier_cols:
         s = pd.to_numeric(df[c], errors="coerce").dropna()
@@ -2074,7 +2586,6 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
             outliers[c] = 0
     report["outliers"] = outliers
 
-    # Simple quality score (100 - penalties)
     score = 100.0
     miss_penalty = sum(miss.values()) / max(1, len(miss)) * 40  # up to -40
     dropout_penalty = min(20.0, report.get("dropouts", 0) * 0.2)
@@ -2085,7 +2596,7 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
 
 
 # ---------------------------
-# Dynamic Charts section (unchanged look)
+# Dynamic Charts section
 # ---------------------------
 
 def render_dynamic_charts_section(df: pd.DataFrame):
@@ -2144,16 +2655,16 @@ def render_dynamic_charts_section(df: pd.DataFrame):
     col1, col2 = st.columns([1, 3])
     with col1:
         if st.button(
-            "➕ Add Chart",
-            key="add_chart_btn",
-            help="Create a new custom chart",
+            "➕ Add Chart", key="add_chart_btn", help="Create a new custom chart"
         ):
             try:
                 new_chart = {
                     "id": str(uuid.uuid4()),
                     "title": "New Chart",
                     "chart_type": "line",
-                    "x_axis": "timestamp" if "timestamp" in df.columns else (available_columns[0] if available_columns else None),
+                    "x_axis": "timestamp"
+                    if "timestamp" in df.columns
+                    else (available_columns[0] if available_columns else None),
                     "y_axis": available_columns[0] if available_columns else None,
                 }
                 st.session_state.dynamic_charts.append(new_chart)
@@ -2163,13 +2674,17 @@ def render_dynamic_charts_section(df: pd.DataFrame):
 
     with col2:
         if st.session_state.dynamic_charts:
-            st.success(f"📈 {len(st.session_state.dynamic_charts)} custom chart(s) active")
+            st.success(
+                f"📈 {len(st.session_state.dynamic_charts)} custom chart(s) active"
+            )
 
     if st.session_state.dynamic_charts:
         for i, chart_config in enumerate(list(st.session_state.dynamic_charts)):
             try:
                 with st.container(border=True):
-                    col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.5, 1.5, 0.5])
+                    col1, col2, col3, col4, col5 = st.columns(
+                        [2, 1.5, 1.5, 1.5, 0.5]
+                    )
 
                     with col1:
                         new_title = st.text_input(
@@ -2184,18 +2699,27 @@ def render_dynamic_charts_section(df: pd.DataFrame):
                         new_type = st.selectbox(
                             "Type",
                             options=["line", "scatter", "bar", "histogram", "heatmap"],
-                            index=["line", "scatter", "bar", "histogram", "heatmap"].index(
-                                chart_config.get("chart_type", "line")
-                            ),
+                            index=[
+                                "line",
+                                "scatter",
+                                "bar",
+                                "histogram",
+                                "heatmap",
+                            ].index(chart_config.get("chart_type", "line")),
                             key=f"type_{chart_config['id']}",
                         )
                         if new_type != chart_config.get("chart_type"):
                             st.session_state.dynamic_charts[i]["chart_type"] = new_type
 
                     with col3:
-                        if chart_config.get("chart_type", "line") not in ["histogram", "heatmap"]:
+                        if chart_config.get("chart_type", "line") not in [
+                            "histogram",
+                            "heatmap",
+                        ]:
                             x_options = (
-                                ["timestamp"] + available_columns if "timestamp" in df.columns else available_columns
+                                ["timestamp"] + available_columns
+                                if "timestamp" in df.columns
+                                else available_columns
                             )
                             current_x = chart_config.get("x_axis")
                             if current_x not in x_options and x_options:
@@ -2205,11 +2729,15 @@ def render_dynamic_charts_section(df: pd.DataFrame):
                                 new_x = st.selectbox(
                                     "X-Axis",
                                     options=x_options,
-                                    index=x_options.index(current_x) if current_x in x_options else 0,
+                                    index=x_options.index(current_x)
+                                    if current_x in x_options
+                                    else 0,
                                     key=f"x_{chart_config['id']}",
                                 )
                                 if new_x != chart_config.get("x_axis"):
-                                    st.session_state.dynamic_charts[i]["x_axis"] = new_x
+                                    st.session_state.dynamic_charts[i][
+                                        "x_axis"
+                                    ] = new_x
                             else:
                                 st.empty()
 
@@ -2223,31 +2751,51 @@ def render_dynamic_charts_section(df: pd.DataFrame):
                                 new_y = st.selectbox(
                                     "Y-Axis",
                                     options=available_columns,
-                                    index=available_columns.index(current_y) if current_y in available_columns else 0,
+                                    index=available_columns.index(current_y)
+                                    if current_y in available_columns
+                                    else 0,
                                     key=f"y_{chart_config['id']}",
                                 )
                                 if new_y != chart_config.get("y_axis"):
-                                    st.session_state.dynamic_charts[i]["y_axis"] = new_y
+                                    st.session_state.dynamic_charts[i][
+                                        "y_axis"
+                                    ] = new_y
                             else:
                                 st.empty()
 
                     with col5:
-                        if st.button("🗑️", key=f"delete_{chart_config['id']}", help="Delete chart"):
+                        if st.button(
+                            "🗑️",
+                            key=f"delete_{chart_config['id']}",
+                            help="Delete chart",
+                        ):
                             try:
                                 idx_to_delete = next(
-                                    (j for j, cfg in enumerate(st.session_state.dynamic_charts) if cfg["id"] == chart_config["id"]),
+                                    (
+                                        j
+                                        for j, cfg in enumerate(
+                                            st.session_state.dynamic_charts
+                                        )
+                                        if cfg["id"] == chart_config["id"]
+                                    ),
                                     -1,
                                 )
                                 if idx_to_delete != -1:
-                                    st.session_state.dynamic_charts.pop(idx_to_delete)
+                                    st.session_state.dynamic_charts.pop(
+                                        idx_to_delete
+                                    )
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"Error deleting chart: {e}")
 
                     try:
                         df_with_rp = calculate_roll_and_pitch(df)
-                        opt = create_dynamic_chart_option(df_with_rp, chart_config)
-                        _st_echarts_render(opt, 400, key=f"chart_plot_{chart_config['id']}")
+                        opt = create_dynamic_chart_option(
+                            df_with_rp, chart_config
+                        )
+                        _st_echarts_render(
+                            opt, 400, key=f"chart_plot_{chart_config['id']}"
+                        )
                     except Exception as e:
                         st.error(f"Error rendering chart: {e}")
 
@@ -2265,7 +2813,10 @@ def main():
     first_load_splash()
 
     if not ECHARTS_AVAILABLE or not PYECHARTS_AVAILABLE:
-        st.error("ECharts/JsCode component missing. Install: pip install streamlit-echarts pyecharts")
+        st.error(
+            "ECharts/JsCode component missing. Install: "
+            "pip install streamlit-echarts pyecharts"
+        )
         return
 
     initialize_session_state()
@@ -2286,7 +2837,9 @@ def main():
         if data_source_mode != st.session_state.data_source_mode:
             st.session_state.data_source_mode = data_source_mode
             st.session_state.telemetry_data = pd.DataFrame()
-            st.session_state.is_viewing_historical = (data_source_mode == "historical")
+            st.session_state.is_viewing_historical = (
+                data_source_mode == "historical"
+            )
             st.session_state.selected_session = None
             st.session_state.current_session_id = None
             st.rerun()
@@ -2300,16 +2853,25 @@ def main():
                         time.sleep(0.5)
 
                     with st.spinner("Connecting..."):
-                        st.session_state.telemetry_manager = EnhancedTelemetryManager()
-                        supabase_connected = st.session_state.telemetry_manager.connect_supabase()
+                        st.session_state.telemetry_manager = (
+                            EnhancedTelemetryManager()
+                        )
+                        supabase_connected = (
+                            st.session_state.telemetry_manager.connect_supabase()
+                        )
                         realtime_connected = False
                         if ABLY_AVAILABLE:
-                            realtime_connected = st.session_state.telemetry_manager.connect_realtime()
+                            realtime_connected = (
+                                st.session_state.telemetry_manager.connect_realtime()
+                            )
 
                         if supabase_connected and realtime_connected:
                             st.success("✅ Connected!")
                         elif supabase_connected:
-                            st.warning("⚠️ Supabase only connected (Ably not available or failed)")
+                            st.warning(
+                                "⚠️ Supabase only connected "
+                                "(Ably not available or failed)"
+                            )
                         else:
                             st.error("❌ Failed to connect to any service!")
 
@@ -2344,7 +2906,9 @@ def main():
                 with col2:
                     st.metric("❌ Errors", stats["errors"])
                     if stats["last_message_time"]:
-                        time_since = (datetime.now() - stats["last_message_time"]).total_seconds()
+                        time_since = (
+                            datetime.now() - stats["last_message_time"]
+                        ).total_seconds()
                         st.metric("⏱️ Last Msg", f"{time_since:.0f}s ago")
                     else:
                         st.metric("⏱️ Last Msg", "Never")
@@ -2367,7 +2931,9 @@ def main():
 
             if st.session_state.auto_refresh:
                 refresh_options = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-                current_index = refresh_options.index(3) if 3 in refresh_options else 2
+                current_index = (
+                    refresh_options.index(3) if 3 in refresh_options else 2
+                )
                 refresh_interval = st.selectbox(
                     "Refresh Rate (seconds)",
                     options=refresh_options,
@@ -2380,7 +2946,10 @@ def main():
             st.session_state.refresh_interval = refresh_interval
 
         else:
-            st.markdown('<div class="status-indicator">📚 Historical Mode</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="status-indicator">📚 Historical Mode</div>',
+                unsafe_allow_html=True,
+            )
 
             if not st.session_state.telemetry_manager:
                 st.session_state.telemetry_manager = EnhancedTelemetryManager()
@@ -2412,11 +2981,14 @@ def main():
                 )
 
                 if selected_session_idx is not None:
-                    selected_session = st.session_state.historical_sessions[selected_session_idx]
+                    selected_session = st.session_state.historical_sessions[
+                        selected_session_idx
+                    ]
 
                     if (
                         st.session_state.selected_session is None
-                        or st.session_state.selected_session["session_id"] != selected_session["session_id"]
+                        or st.session_state.selected_session["session_id"]
+                        != selected_session["session_id"]
                         or st.session_state.telemetry_data.empty
                     ):
                         st.session_state.selected_session = selected_session
@@ -2428,20 +3000,27 @@ def main():
                             )
 
                         with st.spinner(
-                            f"Loading data for session {selected_session['session_id'][:8]}..."
+                            "Loading data for session "
+                            f"{selected_session['session_id'][:8]}..."
                         ):
-                            historical_df = st.session_state.telemetry_manager.get_historical_data(
-                                selected_session["session_id"]
+                            historical_df = (
+                                st.session_state.telemetry_manager.get_historical_data(
+                                    selected_session["session_id"]
+                                )
                             )
                             st.session_state.telemetry_data = historical_df
                             st.session_state.last_update = datetime.now()
 
                         if not historical_df.empty:
-                            st.success(f"✅ Loaded {len(historical_df):,} data points")
+                            st.success(
+                                f"✅ Loaded {len(historical_df):,} data points"
+                            )
                         st.rerun()
 
             else:
-                st.info("Click 'Refresh Sessions' to load available sessions from Supabase.")
+                st.info(
+                    "Click 'Refresh Sessions' to load available sessions from Supabase."
+                )
 
         st.info(f"📡 Channel: {DASHBOARD_CHANNEL_NAME}")
         st.info(f"🔢 Max records per session: {MAX_DATAPOINTS_PER_SESSION:,}")
@@ -2451,8 +3030,13 @@ def main():
     new_messages_count = 0
 
     if st.session_state.data_source_mode == "realtime_session":
-        if (st.session_state.telemetry_manager and st.session_state.telemetry_manager.is_connected):
-            new_messages = st.session_state.telemetry_manager.get_realtime_messages()
+        if (
+            st.session_state.telemetry_manager
+            and st.session_state.telemetry_manager.is_connected
+        ):
+            new_messages = (
+                st.session_state.telemetry_manager.get_realtime_messages()
+            )
 
             current_session_data_from_supabase = pd.DataFrame()
             if new_messages and "session_id" in new_messages[0]:
@@ -2463,19 +3047,27 @@ def main():
                 ):
                     st.session_state.current_session_id = current_session_id
 
-                    with st.spinner(f"Loading current session data for {current_session_id[:8]}..."):
+                    with st.spinner(
+                        f"Loading current session data for {current_session_id[:8]}..."
+                    ):
                         current_session_data_from_supabase = (
-                            st.session_state.telemetry_manager.get_current_session_data(current_session_id)
+                            st.session_state.telemetry_manager.get_current_session_data(
+                                current_session_id
+                            )
                         )
 
                     if not current_session_data_from_supabase.empty:
                         st.success(
-                            f"✅ Loaded {len(current_session_data_from_supabase):,} historical points for current session"
+                            "✅ Loaded "
+                            f"{len(current_session_data_from_supabase):,} historical "
+                            "points for current session"
                         )
 
             if new_messages or not current_session_data_from_supabase.empty:
                 merged_data = merge_telemetry_data(
-                    new_messages, current_session_data_from_supabase, st.session_state.telemetry_data
+                    new_messages,
+                    current_session_data_from_supabase,
+                    st.session_state.telemetry_data,
                 )
                 if not merged_data.empty:
                     new_messages_count = len(new_messages) if new_messages else 0
@@ -2490,7 +3082,8 @@ def main():
 
     if st.session_state.is_viewing_historical and st.session_state.selected_session:
         st.markdown(
-            '<div class="historical-notice">📚 Viewing Historical Data - No auto-refresh active</div>',
+            '<div class="historical-notice">📚 Viewing Historical Data - '
+            "No auto-refresh active</div>",
             unsafe_allow_html=True,
         )
         render_session_info(st.session_state.selected_session)
@@ -2521,12 +3114,19 @@ def main():
                 debug_info = {
                     "Data Source Mode": st.session_state.data_source_mode,
                     "Is Viewing Historical": st.session_state.is_viewing_historical,
-                    "Selected Session ID": st.session_state.selected_session["session_id"][:8] + "..."
+                    "Selected Session ID": st.session_state.selected_session[
+                        "session_id"
+                    ][:8]
+                    + "..."
                     if st.session_state.selected_session
                     else None,
                     "Current Real-time Session ID": st.session_state.current_session_id,
-                    "Number of Historical Sessions": len(st.session_state.historical_sessions),
-                    "Telemetry Data Points (in memory)": len(st.session_state.telemetry_data),
+                    "Number of Historical Sessions": len(
+                        st.session_state.historical_sessions
+                    ),
+                    "Telemetry Data Points (in memory)": len(
+                        st.session_state.telemetry_data
+                    ),
                     "Max Datapoints Per Session": MAX_DATAPOINTS_PER_SESSION,
                     "Max Rows Per Request": SUPABASE_MAX_ROWS_PER_REQUEST,
                 }
@@ -2536,12 +3136,22 @@ def main():
                     debug_info.update(
                         {
                             "Ably Connected (Manager Status)": st.session_state.telemetry_manager.is_connected,
-                            "Messages Received (via Ably)": stats["messages_received"],
+                            "Messages Received (via Ably)": stats[
+                                "messages_received"
+                            ],
                             "Connection Errors": stats["errors"],
-                            "Total Pagination Requests": stats["pagination_stats"]["total_requests"],
-                            "Total Rows Fetched": stats["pagination_stats"]["total_rows_fetched"],
-                            "Sessions Requiring Pagination": stats["pagination_stats"]["sessions_paginated"],
-                            "Largest Session Size": stats["pagination_stats"]["largest_session_size"],
+                            "Total Pagination Requests": stats["pagination_stats"][
+                                "total_requests"
+                            ],
+                            "Total Rows Fetched": stats["pagination_stats"][
+                                "total_rows_fetched"
+                            ],
+                            "Sessions Requiring Pagination": stats[
+                                "pagination_stats"
+                            ]["sessions_paginated"],
+                            "Largest Session Size": stats["pagination_stats"][
+                                "largest_session_size"
+                            ],
                         }
                     )
 
@@ -2596,7 +3206,10 @@ def main():
         with col3:
             st.info(f"⏰ Last update: {st.session_state.last_update.strftime('%H:%M:%S')}")
         with col4:
-            if st.session_state.data_source_mode == "realtime_session" and new_messages_count > 0:
+            if (
+                st.session_state.data_source_mode == "realtime_session"
+                and new_messages_count > 0
+            ):
                 st.success(f"📨 +{new_messages_count}")
 
     if len(df) > 10000:
@@ -2671,9 +3284,13 @@ def main():
 
         st.subheader("📃 Raw Telemetry Data")
         if len(df) > 1000:
-            st.info(f"ℹ️ Showing last 100 from all {len(df):,} data points below.")
+            st.info(
+                f"ℹ️ Showing last 100 from all {len(df):,} data points below."
+            )
         else:
-            st.info(f"ℹ️ Showing last 100 from all {len(df):,} data points below.")
+            st.info(
+                f"ℹ️ Showing last 100 from all {len(df):,} data points below."
+            )
 
         display_df = df.tail(100) if len(df) > 100 else df
         st.dataframe(display_df, use_container_width=True, height=400)
@@ -2736,7 +3353,10 @@ def main():
                     st.write(f"  - {msg}")
 
     # Auto-refresh
-    if (st.session_state.data_source_mode == "realtime_session" and st.session_state.auto_refresh):
+    if (
+        st.session_state.data_source_mode == "realtime_session"
+        and st.session_state.auto_refresh
+    ):
         if AUTOREFRESH_AVAILABLE:
             st_autorefresh(
                 interval=st.session_state.refresh_interval * 1000,
@@ -2753,8 +3373,9 @@ def main():
         "<div style='text-align: center; opacity: 0.8; padding: 1rem;'>"
         "<p>Shell Eco-marathon Telemetry Dashboard</p>"
         "</div>",
-        unsafe_allow_html=True,    
+        unsafe_allow_html=True,
     )
+
 
 if __name__ == "__main__":
     main()
