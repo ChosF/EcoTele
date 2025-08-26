@@ -1,10 +1,10 @@
 # 🏎️ Shell Eco-marathon Telemetry Dashboard
 
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)  
-[![Status: Beta](https://img.shields.io/badge/status-beta-yellow)](https://github.com/ChosF/EcoTele/releases/tag/Dashboard_Beta)  
+[![Status: Beta](https://img.shields.io/badge/status-beta-yellow)](https://github.com/ChosF/EcoTele/releases)
 
-A full-stack, real-time and now historical telemetry system for Shell Eco-marathon vehicles.  
-From an ESP32-based transmitter through cloud persistence to a Streamlit dashboard, you get live KPIs, charts, maps and replayable past runs.
+A full-stack, real-time and historical telemetry system for Shell Eco‑marathon vehicles.  
+From an ESP32-based transmitter through cloud persistence to a Streamlit dashboard, you get live KPIs, maps, charts, and replayable past runs.
 
 ---
 
@@ -15,52 +15,37 @@ ESP32 Transmitter (Transmiter.cpp)
         └─ MQTT/SSL → Ably MQTT Broker →
 Bridge & DB Writer (maindata.py)
    • republishes live → Ably Realtime Pub/Sub
-   • batches & stores → Supabase
-        └─ Streamlit Dashboard (dashboard_060.py)
+   • batches & stores → Supabase (sessions)
+        └─ Streamlit Dashboard (dashboard_080.py)
            • Real-time view
-           • Historical run browser
+           • Historical session browser (paginated)
+           • Custom charts
 ```
 
 ---
 
-## ✨ v0.6 Beta Highlights
+## ✨ v0.8 Beta Highlights 
 
-- **ESP32 Hardware Support**  
-  Connect your on-vehicle ESP32 running the transmitter program to stream real sensor data via secure MQTT.
+- ECharts rendering path in the dashboard → faster real-time plotting, smoother zoom/pan, fixes scroll/resize issues on long sessions.  
+- Full historical data workflow → list sessions, load by pagination, replay with session summary.  
+- Custom session names and improved UX (gauges, GPS+altitude split, data quality hints).
 
-- **Cloud Persistence & Sessions**  
-  All telemetry is batched and saved in Supabase. Each run is tracked as a distinct session, preserving start time, duration and record counts.
-
-- **Historical Data Mode**  
-  Browse, select and replay any past session. Automatic pagination handles large datasets seamlessly.
-
-- **Unified Live + Replay**  
-  Live streaming and historical replay share the same timeline view with automatic deduplication, so charts never jump or repeat.
-
-- **Enhanced UX for Big Data**  
-  Informative spinners during load, “Large Dataset” notices, dual CSV download (full vs sample), and detailed metrics: time span, data rate, memory usage and source breakdown.
+Full changelog in the release notes.
 
 ---
 
 ## 🎯 Features
 
-1. **ESP32 Transmitter** (`Transmiter.cpp`)  
-   • FreeRTOS C++ app publishes speed, voltage, power, GPS, IMU via MQTT over SSL.  
+1. ESP32 Transmitter (`Transmiter.cpp`)  
+   • FreeRTOS C++ app publishes speed, voltage, current, power, GPS, IMU via MQTT over SSL.
 
-2. **Bridge & Database** (`maindata.py`)  
-   • Consumes from MQTT or mock generator.  
-   • Republishes live events to Ably Realtime.  
-   • Batches writes every few seconds to Supabase with session metadata.  
+2. Bridge & Database (`maindata.py`)  
+   • Consumes hardware/mock telemetry, republishes to Ably, and batches to Supabase with session metadata.
 
-3. **Dashboard** (`dashboard_060.py`)  
-   • Real-time + historical mode selection.  
-   • Session list & loader with pagination.  
-   • Full KPI suite & rich Plotly charts + custom-chart builder.  
-   • CSV exports, dataset statistics and responsive theming.  
-
-4. **Legacy & Prototypes**  
-   • `dashboard_050.py` (v0.5) – current live-only build  
-   • `dashboard_020.py` & `demo_1.py` – prior alpha prototypes  
+3. Dashboard (`dashboard_080.py`)  
+   • Real‑time + Historical modes, session list/loader with pagination.  
+   • KPIs, gauges, GPS with altitude, IMU (incl. roll/pitch), efficiency, and a custom chart builder.  
+   • CSV export (full/sample), dataset statistics, data‑quality hints.
 
 ---
 
@@ -71,19 +56,20 @@ Bridge & DB Writer (maindata.py)
 │  ESP32 Transmitter     │
 │  (Transmiter.cpp)      │
 └──────────┬─────────────┘
-           │ MQTT/SSL → Ably MQTT 
+           │ MQTT/SSL → Ably MQTT
 ┌──────────▼─────────────┐
 │ Bridge & DB Writer     │
 │ (maindata.py)          │
 │ • Live → Ably Realtime │
 │ • Batch → Supabase     │
 └──────────┬─────────────┘
-           │ Pub/Sub & HTTP 
+           │ Pub/Sub & HTTP
 ┌──────────▼─────────────┐
 │  Streamlit Dashboard   │
-│  (dashboard_060.py)    │
+│  (dashboard_080.py)    │
 │ • Live view            │
 │ • Historical browser   │
+│ • Custom charts (ECharts/Plotly) │
 └────────────────────────┘
 ```
 
@@ -92,36 +78,32 @@ Bridge & DB Writer (maindata.py)
 ## 🏃 Quickstart
 
 ### Prerequisites
-
 - Python 3.8+  
-- ESP-IDF toolchain (for `Transmiter.cpp`)  
-- `pip install -r requirements.txt`  
-
-### 1. Flash & Run ESP32
-
+- ESP‑IDF toolchain (for `Transmiter.cpp`)  
+- Install Python deps:
 ```bash
-# in ESP-IDF project
+pip install -r requirements.txt
+```
+
+### 1) Flash & Run ESP32
+```bash
 idf.py set-target esp32
-idf.py menuconfig   # configure Wi-Fi & MQTT
+idf.py menuconfig   # configure Wi‑Fi & MQTT
 idf.py build
 idf.py -p /dev/ttyUSB0 flash monitor
 ```
 
-### 2. Start Bridge & DB Writer
-
+### 2) Start Bridge & DB Writer
 ```bash
-cd EcoTele
-pip install -r requirements.txt
 python maindata.py
 ```
 
-### 3. Launch Dashboard
-
+### 3) Launch Dashboard
 ```bash
-streamlit run dashboard_060.py
+streamlit run dashboard_080.py
 ```
 
-> Deploy on Streamlit Community Cloud by selecting `dashboard_060.py`.
+> You can also deploy on Streamlit Community Cloud by selecting `dashboard_080.py`.
 
 ---
 
@@ -129,31 +111,31 @@ streamlit run dashboard_060.py
 
 ```
 EcoTele/
-├── Transmiter.cpp       # ESP32 data transmitter (MQTT/SSL)
-├── maindata.py          # Bridge + batch-to-Supabase service
-├── dashboard_060.py     # Current Streamlit dashboard (live + historical)
-├── dashboard_050.py     # Live-only dashboard (v0.5 Beta)
-├── dashboard_020.py     # Legacy dashboard (v0.2 Alpha)
-├── demo_1.py            # First prototype (mock-only)
-├── requirements.txt     # Python dependencies
-├── LICENSE              # Apache 2.0 License
-└── README.md            # This file
+├── Transmiter.cpp        # ESP32 data transmitter (MQTT/SSL)
+├── maindata.py           # Bridge + batch-to-Supabase service (sessions, persistence)
+├── dashboard_080.py      # Current dashboard (ECharts + historical + custom charts)
+├── dashboard_070.py      # Previous dashboard with full historical capability
+├── dashboard_0B1.py      # Experimental build (single long page, no tabs)
+├── demo_1.py             # First prototype (mock-only)
+├── requirements.txt      # Python dependencies
+├── LICENSE               # Apache 2.0
+└── README.md             # This file
 ```
 
 ---
 
-## 🚧 Roadmap & Future Work
-  
-- Real-sensor integration for powertrain & IMU  
+## 📅 Versions
+- 0B1: Experimental, single scroll page (no tabs)  
+- 070: Historical capability baseline  
+- 080: ECharts performance + session names + refined UX
 
 ---
 
 ## 📄 License
 
-Licensed under the **Apache License 2.0**.  
-See [LICENSE](LICENSE) for details.
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
 
 ---
 
-> Feedback, bug reports & contributions:  
-> https://github.com/ChosF/EcoTele/issues
+Feedback, bug reports & contributions:  
+https://github.com/ChosF/EcoTele/issues
