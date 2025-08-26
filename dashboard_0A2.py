@@ -100,22 +100,19 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------
-# Apple-Style Liquid Glass UI: theme-aware, accessible
+# Liquid Glass-Inspired UI (translucent frosted design)
 # -------------------------------------------------------
 def get_theme_aware_css():
-    # Subtle base64 noise texture (64x64 PNG), very light opacity
-    noise_png = (
-        "data:image/png;base64,"
-        "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsSAAALEgHS3X78"
-        "AAAAGXRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4xLjJ1Q6rjAAABZUlEQVR4Xu3aS26DQBBF"
-        "0eI0QGm0m4JwE4Jf9Y3oO1V9i1g1c7K7nKiWk4DkN3R4g7kKytb1E1dL5m1g8e9y0L0mWkqV"
-        "k5a2l2rY9wGgJb7z0hWk5kS+H0uA1Q2w2w3mZ5B3QGJ6bGg2wAq6fKcXo3d7k8o2b7v8b8/"
-        "W3l9Hk8gk5E0Qw6dZcY9/8K8f3rDg6nM8ZfCqgJr2j4lP6iJp7b8KStQZp3tqV6X2mOTwF2e"
-        "YHk8kQ7uYx/2cKQb6b1m4k9tK0bY3u7lYwUEV7l2OXP3d1G0mQkL1lXb7f0W+9R8q6+0vCwQ"
-        "gA4bGQh4aGIZ8fHx4cHBw+Pj4/f39+fn5+Pj4/Pz8x8dHj1Q7KQ2mB2s7qf8t3z8f7nQ9v0n"
-        "Q0E2kCkZb5XUo7iO2v8Rz8v0a9+2rCjH8M6gK6n6M3u4S3n9i3d/0Vw8gk4Z8g9G6cZ3dA2U"
-        "vI2f9w7kG6fGfZgkBv7Dk0GgWJjY2NjY2NjY+Pj4+Pj4eHh4eHh4eHh4fHxyK7J2mYz5QkA1"
-        "S8kz2Xg4k8bQFZ5m8g4m8aQFQAAAAAElFTkSuQmCC"
+    # Subtle inline SVG noise texture (very light)
+    noise_svg = (
+        "data:image/svg+xml;base64,"
+        "PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyMDAnIGhlaWdo"
+        "dD0nMjAwJz4KPGZpbHRlciBpZD0nbic+PGZlVHVyYnVsZW5jZSByZXN1bHQ9J25vaXNlJyB0eXBl"
+        "PSdmcmFjdGFsTm9pc2UnIGJhc2VGcmVxdWVuY3k9JzAuOTknIG51bU9jdGF2ZXM9JzQgJy8+PGZl"
+        "Q29sb3JNYXRyaXggdHlwZT0nbWF0cml4JyB2YWx1ZXM9JzAgMCAwIDAgMCAwIDAgMCAwIDAgMCAw"
+        "IDAgMCAwIDAgMCAwIDAgMC4wOTUgMCcgc3VwZXJwcmVzZXJ2YXRpdmU9J3RydWUnLz48L2ZpbHRl"
+        "cj4KPHJlY3Qgd2lkdGg9JzEwMCUnIGhlaWdodD0nMTAwJScgZmlsbD0nI2ZmZicgZmlsdGVyPSd1"
+        "cmwoI24pJyBvcGFjaXR5PScwLjA5Jy8+Cjwvc3ZnPg=="
     )
 
     return f"""
@@ -123,456 +120,478 @@ def get_theme_aware_css():
 :root {{
   color-scheme: light dark;
 
-  /* Base palette */
+  /* System font stack */
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+          Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji",
+          "Segoe UI Emoji", "Segoe UI Symbol";
+
+  /* Core palette and adaptive tints */
   --bg: Canvas;
   --text: CanvasText;
-
-  /* Adaptive text */
-  --text-strong: color-mix(in oklab, CanvasText 92%, Canvas);
-  --text: color-mix(in oklab, CanvasText 84%, Canvas);
   --text-muted: color-mix(in oklab, CanvasText 60%, Canvas);
   --text-subtle: color-mix(in oklab, CanvasText 45%, Canvas);
 
-  /* Glass + strokes + highlights */
-  --glass: color-mix(in oklab, Canvas 70%, transparent);
-  --glass-strong: color-mix(in oklab, Canvas 60%, transparent);
-  --glass-dim: color-mix(in oklab, Canvas 78%, transparent);
+  /* Glass variables */
+  --glass-tint: color-mix(in oklab, CanvasText 10%, Canvas);
+  --glass-tint-strong: color-mix(in oklab, CanvasText 15%, Canvas);
+  --glass-blur: 18px;
+  --glass-radius: 16px;
+  --glass-radius-lg: 22px;
+  --hairline: color-mix(in oklab, CanvasText 20%, transparent);
+  --hairline-strong: color-mix(in oklab, CanvasText 35%, transparent);
+  --inner-highlight: color-mix(in oklab, #fff 60%, transparent);
 
-  --glass-stroke: color-mix(in oklab, CanvasText 20%, transparent);
-  --glass-stroke-weak: color-mix(in oklab, CanvasText 12%, transparent);
-  --glass-inner: color-mix(in oklab, CanvasText 8%, transparent);
-  --glass-specular: color-mix(in oklab, CanvasText 18%, transparent);
+  /* Shadows and glows */
+  --shadow-1: 0 8px 24px color-mix(in oklab, CanvasText 12%, transparent);
+  --shadow-2: 0 18px 48px color-mix(in oklab, CanvasText 18%, transparent);
+  --edge-glow: 0 0 0 1px color-mix(in oklab, CanvasText 18%, transparent);
 
   /* Accents */
-  --ok: color-mix(in oklab, #43a047 70%, CanvasText);
-  --accent: color-mix(in oklab, #0a84ff 70%, CanvasText);
+  --accent: #2997ff;
 
-  /* Blur + radii + shadows */
-  --blur-1: 14px;
-  --blur-2: 22px;
-  --radius-s: 12px;
-  --radius-m: 16px;
-  --radius-l: 20px;
-  --radius-xl: 24px;
+  /* Motion + performance */
+  --hover-lift: translateY(-2px) scale(1.01);
+  --active-press: translateY(0px) scale(0.998);
 
-  --shadow-1: 0 6px 24px color-mix(in oklab, CanvasText 14%, transparent);
-  --shadow-2: 0 14px 40px color-mix(in oklab, CanvasText 18%, transparent);
-  --shadow-inset: inset 0 1px 0 color-mix(in oklab, #fff 30%, transparent),
-                  inset 0 -1px 0 color-mix(in oklab, CanvasText 10%, transparent);
-
-  --parallax-strength: 0.03;
-
-  /* Noise overlay */
-  --noise-url: url('{noise_png}');
-  --noise-opacity: 0.02;
+  /* Noise */
+  --noise: url('{noise_svg}');
+  --noise-opacity: 0.08;
 }}
 
 @media (prefers-color-scheme: dark) {{
   :root {{
-    --glass: color-mix(in oklab, Canvas 62%, transparent);
-    --glass-strong: color-mix(in oklab, Canvas 52%, transparent);
-    --glass-dim: color-mix(in oklab, Canvas 70%, transparent);
-    --blur-1: 16px;
-    --blur-2: 26px;
-    --shadow-1: 0 10px 28px rgba(0,0,0,0.38);
-    --shadow-2: 0 20px 48px rgba(0,0,0,0.48);
+    --glass-tint: color-mix(in oklab, CanvasText 20%, Canvas);
+    --glass-tint-strong: color-mix(in oklab, CanvasText 28%, Canvas);
+    --shadow-1: 0 10px 26px rgba(0, 0, 0, 0.35);
+    --shadow-2: 0 22px 52px rgba(0, 0, 0, 0.5);
   }}
 }}
 
-* {{
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-               Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji",
-               "Segoe UI Symbol", sans-serif;
-}}
-
 html, body {{
+  font-family: var(--font);
   color: var(--text);
-  background: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }}
 
 [data-testid="stAppViewContainer"] {{
-  position: relative;
   background:
-    radial-gradient(1000px 600px at 10% -10%,
-                    color-mix(in oklab, CanvasText 12%, transparent), transparent 60%),
-    radial-gradient(1100px 700px at 110% 110%,
-                    color-mix(in oklab, CanvasText 10%, transparent), transparent 60%),
+    radial-gradient(1200px 600px at calc(10% + var(--parallaxX, 0px))
+      calc(-10% + var(--parallaxY, 0px)),
+      color-mix(in oklab, CanvasText 10%, transparent), transparent 60%),
+    radial-gradient(1300px 700px at calc(110% + var(--parallaxX, 0px))
+      calc(110% + var(--parallaxY, 0px)),
+      color-mix(in oklab, CanvasText 9%, transparent), transparent 60%),
+    radial-gradient(900px 520px at 50% 50%,
+      color-mix(in oklab, CanvasText 6%, transparent), transparent 65%),
     linear-gradient(180deg,
-                    color-mix(in oklab, CanvasText 6%, var(--bg)) 0%,
-                    var(--bg) 65%);
+      color-mix(in oklab, CanvasText 6%, var(--bg)) 0%,
+      var(--bg) 60%);
   background-attachment: fixed;
+  position: relative;
+  overflow: hidden;
 }}
+
 [data-testid="stAppViewContainer"]::before {{
   content: "";
   position: fixed;
   inset: 0;
-  background: var(--noise-url);
+  background-image: var(--noise);
   opacity: var(--noise-opacity);
   pointer-events: none;
-  z-index: -1;
-  mix-blend-mode: soft-light;
+  z-index: 0;
 }}
 
 [data-testid="stHeader"] {{
-  position: sticky;
-  top: 0;
-  z-index: 10;
   background:
     linear-gradient(90deg,
-      color-mix(in oklab, CanvasText 8%, transparent),
-      color-mix(in oklab, CanvasText 8%, transparent)),
-    var(--glass);
-  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  border-bottom: 1px solid var(--glass-stroke);
+      color-mix(in oklab, var(--glass-tint) 65%, transparent),
+      color-mix(in oklab, var(--glass-tint) 65%, transparent)),
+    color-mix(in oklab, Canvas 70%, transparent);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border-bottom: 1px solid var(--hairline);
   box-shadow: var(--shadow-1);
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }}
+
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {{
   [data-testid="stHeader"] {{
-    background: linear-gradient(180deg,
-       color-mix(in oklab, CanvasText 6%, var(--bg)),
-       var(--bg));
+    background:
+      linear-gradient(90deg,
+        color-mix(in oklab, CanvasText 8%, Canvas),
+        color-mix(in oklab, CanvasText 8%, Canvas));
   }}
 }}
 
 .main-header {{
-  font-size: 2.4rem;
+  font-size: 2.35rem;
   font-weight: 900;
   letter-spacing: .2px;
+  text-align: center;
+  margin: .35rem 0 1.1rem;
   background: linear-gradient(90deg,
-              color-mix(in oklab, CanvasText 85%, var(--text)),
-              color-mix(in oklab, CanvasText 55%, var(--text)));
+    color-mix(in oklab, CanvasText 80%, var(--text)),
+    color-mix(in oklab, CanvasText 50%, var(--text)));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-align: center;
-  margin: .35rem 0 1.1rem;
   text-shadow:
-    0 1px 0 color-mix(in oklab, #fff 26%, transparent),
-    0 6px 18px color-mix(in oklab, CanvasText 18%, transparent);
-  filter: drop-shadow(0 10px 16px color-mix(in oklab, CanvasText 18%, transparent));
+    0 1px 0 rgba(255,255,255,0.15),
+    0 10px 30px rgba(0,0,0,0.18),
+    /* extremely subtle chromatic separation */
+    0 0.4px 0 rgba(41,151,255,0.06),
+    0 -0.4px 0 rgba(255,60,0,0.06);
 }}
 
 .status-indicator {{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: .55rem .9rem;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: .9rem;
-  border: 1px solid var(--glass-stroke);
+  display: flex; align-items: center; justify-content: center;
+  padding: .55rem .9rem; border-radius: 999px; font-weight: 700; font-size: .9rem;
+  border: 1px solid var(--hairline);
   background:
     linear-gradient(180deg,
-      color-mix(in oklab, #fff 8%, transparent),
-      color-mix(in oklab, CanvasText 6%, transparent)),
-    var(--glass-strong);
-  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  box-shadow: var(--shadow-1), var(--shadow-inset);
+      color-mix(in oklab, var(--glass-tint-strong) 80%, transparent),
+      color-mix(in oklab, var(--glass-tint) 60%, transparent)),
+    color-mix(in oklab, Canvas 70%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: var(--shadow-1), inset 0 0 0 .5px var(--inner-highlight);
+  will-change: transform;
+  transform-style: preserve-3d;
 }}
 
 .card {{
-  position: relative;
-  border-radius: var(--radius-l);
+  border-radius: var(--glass-radius);
   padding: 1.1rem;
-  border: 1px solid var(--glass-stroke);
+  border: 1px solid var(--hairline);
   background:
     radial-gradient(120% 130% at 85% 15%,
       color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
     radial-gradient(130% 120% at 15% 85%,
       color-mix(in oklab, CanvasText 6%, transparent), transparent 60%),
-    var(--glass);
-  -webkit-backdrop-filter: blur(var(--blur-2)) saturate(160%);
-  backdrop-filter: blur(var(--blur-2)) saturate(160%);
-  box-shadow: var(--shadow-1);
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint) 75%, transparent),
+      color-mix(in oklab, var(--glass-tint) 60%, transparent));
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%) brightness(1.05);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%) brightness(1.05);
+  box-shadow: var(--shadow-1), inset 0 1px 0 rgba(255,255,255,0.08);
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  position: relative;
+  overflow: hidden;
   will-change: transform;
+  transform-style: preserve-3d;
 }}
-.card::before {{
+.card::after {{
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
+  background-image: var(--noise);
+  opacity: calc(var(--noise-opacity) * 0.9);
   pointer-events: none;
-  box-shadow: inset 0 1px 0 color-mix(in oklab, #fff 30%, transparent),
-              inset 0 -1px 0 color-mix(in oklab, CanvasText 14%, transparent);
 }}
+
 .card:hover {{
-  transform: translateY(-3px);
+  transform: var(--hover-lift);
   box-shadow: var(--shadow-2);
-  border-color: color-mix(in oklab, CanvasText 26%, transparent);
+  border-color: var(--hairline-strong);
 }}
+
 .card-strong {{
-  background: var(--glass-strong);
-  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint-strong) 85%, transparent),
+      color-mix(in oklab, var(--glass-tint) 65%, transparent));
+  border: 1px solid var(--hairline-strong);
 }}
 
 .session-info h3 {{
-  color: var(--text);
-  margin: 0 0 .5rem;
-  font-weight: 800;
+  color: var(--text); margin: 0 0 .5rem; font-weight: 800;
 }}
 .session-info p {{
-  margin: .25rem 0;
-  color: var(--text-muted);
+  margin: .25rem 0; color: var(--text-muted);
 }}
 
 .historical-notice, .pagination-info {{
-  border-radius: var(--radius-m);
-  padding: .9rem 1rem;
-  font-weight: 700;
-  border: 1px solid var(--glass-stroke);
+  border-radius: 14px; padding: .9rem 1rem; font-weight: 700;
+  border: 1px solid var(--hairline);
   background:
-    radial-gradient(110% 120% at 80% 10%,
-      color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
-    var(--glass);
-  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  backdrop-filter: blur(var(--blur-1)) saturate(140%);
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint) 80%, transparent),
+      color-mix(in oklab, var(--glass-tint) 60%, transparent));
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  box-shadow: var(--shadow-1);
 }}
 
 .widget-grid {{
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 1rem;
-  margin-top: .75rem;
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  gap: 1rem; margin-top: .75rem;
 }}
+
 .gauge-container {{
-  text-align: center;
-  padding: .75rem;
-  border-radius: var(--radius-m);
-  border: 1px solid var(--glass-stroke);
+  text-align: center; padding: .75rem; border-radius: 16px;
+  border: 1px solid var(--hairline);
   background:
     radial-gradient(120% 120% at 85% 15%,
       color-mix(in oklab, CanvasText 4%, transparent), transparent 60%),
     radial-gradient(120% 130% at 20% 80%,
       color-mix(in oklab, CanvasText 4%, transparent), transparent 60%),
-    var(--glass);
-  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint) 70%, transparent),
+      color-mix(in oklab, var(--glass-tint) 55%, transparent));
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease,
+              box-shadow .25s ease;
+  box-shadow: var(--shadow-1), inset 0 1px 0 rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
   will-change: transform;
-  box-shadow: var(--shadow-1);
+  transform-style: preserve-3d;
+}}
+.gauge-container::after {{
+  content: "";
+  position: absolute; inset: 0;
+  background-image: var(--noise);
+  opacity: calc(var(--noise-opacity) * 0.8);
+  pointer-events: none;
 }}
 .gauge-container:hover {{
-  transform: translateY(-2px);
-  border-color: color-mix(in oklab, CanvasText 22%, transparent);
+  transform: var(--hover-lift);
+  border-color: var(--hairline-strong);
+  box-shadow: var(--shadow-2);
 }}
 .gauge-title {{
-  font-size: .85rem;
-  font-weight: 600;
-  color: var(--text-subtle);
+  font-size: .85rem; font-weight: 600; color: var(--text-subtle);
   margin-bottom: .25rem;
 }}
 
 .chart-wrap {{
-  border-radius: var(--radius-l);
-  border: 1px solid var(--glass-stroke);
+  border-radius: 18px; border: 1px solid var(--hairline);
   background:
     radial-gradient(110% 120% at 85% 10%,
       color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
-    var(--glass-dim);
-  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  backdrop-filter: blur(var(--blur-1)) saturate(140%);
-  padding: .75rem;
-  box-shadow: var(--shadow-1);
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint) 70%, transparent),
+      color-mix(in oklab, var(--glass-tint) 55%, transparent));
+  padding: .75rem; box-shadow: var(--shadow-1);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  position: relative;
+  overflow: hidden;
+}}
+.chart-wrap::after {{
+  content: "";
+  position: absolute; inset: 0;
+  background-image: var(--noise);
+  opacity: calc(var(--noise-opacity) * 0.7);
+  pointer-events: none;
 }}
 
 .stButton > button, div[data-testid="stDownloadButton"] > button {{
-  border-radius: var(--radius-m) !important;
-  font-weight: 700 !important;
-  color: var(--text) !important;
-  background: linear-gradient(135deg,
-              color-mix(in oklab, CanvasText 18%, var(--bg)),
-              color-mix(in oklab, CanvasText 14%, var(--bg))) !important;
-  border: 1px solid color-mix(in oklab, CanvasText 20%, var(--glass-stroke)) !important;
-  box-shadow: 0 6px 16px color-mix(in oklab, CanvasText 15%, transparent) !important;
+  border-radius: 14px !important; font-weight: 700 !important; color: var(--text) !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in oklab, var(--glass-tint-strong) 85%, transparent),
+      color-mix(in oklab, var(--glass-tint) 70%, transparent)) !important;
+  border: 1px solid var(--hairline-strong) !important;
+  box-shadow: 0 8px 18px color-mix(in oklab, CanvasText 18%, transparent) !important,
+              inset 0 1px 0 rgba(255,255,255,0.1) !important;
   transition: transform .15s ease, box-shadow .2s ease !important;
+  backdrop-filter: blur(10px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+  will-change: transform;
 }}
-.stButton > button:hover, div[data-testid="stDownloadButton"] > button:hover {{
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px color-mix(in oklab, CanvasText 18%, transparent) !important;
+.stButton > button:hover,
+div[data-testid="stDownloadButton"] > button:hover {{
+  transform: var(--hover-lift);
+  box-shadow: 0 12px 26px color-mix(in oklab, CanvasText 22%, transparent) !important;
 }}
-.stButton > button:active, div[data-testid="stDownloadButton"] > button:active {{
-  transform: translateY(0);
+.stButton > button:active,
+div[data-testid="stDownloadButton"] > button:active {{
+  transform: var(--active-press);
 }}
 
 div[data-testid="stRadio"] > div[role="radiogroup"] {{
-  display: flex;
-  gap: .5rem;
-  flex-wrap: wrap;
-  background: var(--glass-strong);
-  border: 1px solid var(--glass-stroke);
-  border-radius: var(--radius-m);
-  padding: .35rem;
-  -webkit-backdrop-filter: blur(var(--blur-1)) saturate(150%);
-  backdrop-filter: blur(var(--blur-1)) saturate(150%);
+  display: flex; gap: .5rem; flex-wrap: wrap;
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint) 80%, transparent),
+      color-mix(in oklab, var(--glass-tint) 55%, transparent));
+  border: 1px solid var(--hairline);
+  border-radius: 14px; padding: .35rem;
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
   box-shadow: var(--shadow-1);
 }}
 div[data-testid="stRadio"] > div[role="radiogroup"] > label {{
-  border: 1px solid var(--glass-stroke-weak);
-  background: color-mix(in oklab, Canvas 86%, transparent);
-  padding: .45rem .8rem;
-  border-radius: 10px;
-  font-weight: 700;
-  color: var(--text-subtle);
+  border: 1px solid var(--hairline);
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, Canvas 85%, transparent),
+      color-mix(in oklab, Canvas 70%, transparent));
+  padding: .45rem .8rem; border-radius: 10px; font-weight: 700; color: var(--text-subtle);
   transition: all .15s ease;
 }}
 div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {{
-  color: var(--text);
-  transform: translateY(-1px);
+  color: var(--text); transform: translateY(-1px);
 }}
 div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"] {{
-  background: color-mix(in oklab, CanvasText 8%, var(--glass));
-  color: var(--text);
-  border-color: color-mix(in oklab, CanvasText 20%, var(--glass-stroke));
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--accent) 18%, transparent),
+      color-mix(in oklab, var(--glass-tint) 55%, transparent));
+  color: var(--text); border-color: var(--hairline-strong);
   box-shadow: inset 0 -2px 0 0 color-mix(in oklab, CanvasText 16%, transparent);
 }}
 
 [data-testid="stDataFrame"], [data-testid="stExpander"], [data-testid="stAlert"] {{
-  border-radius: var(--radius-m);
-  border: 1px solid var(--glass-stroke);
+  border-radius: 16px; border: 1px solid var(--hairline);
   background:
     radial-gradient(120% 120% at 80% 10%,
       color-mix(in oklab, CanvasText 5%, transparent), transparent 60%),
-    var(--glass);
-  -webkit-backdrop-filter: blur(var(--blur-1));
-  backdrop-filter: blur(var(--blur-1));
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint) 70%, transparent),
+      color-mix(in oklab, var(--glass-tint) 55%, transparent));
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
 }}
 
 div[data-testid="stMetric"] {{
   position: relative;
-  border-radius: var(--radius-l);
+  border-radius: 20px;
   padding: 1rem 1.1rem;
   background:
     linear-gradient(180deg,
-      color-mix(in oklab, #fff 10%, transparent),
-      color-mix(in oklab, CanvasText 6%, transparent)),
-    var(--glass);
-  -webkit-backdrop-filter: blur(var(--blur-2)) saturate(160%);
-  backdrop-filter: blur(var(--blur-2)) saturate(160%);
-  border: 1px solid var(--glass-stroke);
-  box-shadow: var(--shadow-1);
+      color-mix(in oklab, var(--glass-tint-strong) 82%, transparent),
+      color-mix(in oklab, var(--glass-tint) 62%, transparent));
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: var(--shadow-1), inset 0 1px 0 rgba(255,255,255,0.1);
+  overflow: hidden;
 }}
-div[data-testid="stMetric"]::before {{
-  /* Rim lighting */
+div[data-testid="stMetric"]::after {{
   content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  position: absolute; inset: 0;
+  background-image: var(--noise);
+  opacity: calc(var(--noise-opacity) * 0.9);
   pointer-events: none;
-  box-shadow: var(--shadow-inset);
 }}
 div[data-testid="stMetric"] [data-testid="stMetricDelta"] {{
   font-weight: 700;
   padding: .15rem .45rem;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--ok) 10%, transparent);
+  background: color-mix(in oklab, #43a047 14%, transparent);
+  border: 1px solid color-mix(in oklab, #43a047 24%, transparent);
 }}
 
 [data-testid="stSidebar"] > div {{
-  background: var(--glass-strong);
-  border-right: 1px solid var(--glass-stroke);
-  -webkit-backdrop-filter: blur(var(--blur-2)) saturate(160%);
-  backdrop-filter: blur(var(--blur-2)) saturate(160%);
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint-strong) 88%, transparent),
+      color-mix(in oklab, var(--glass-tint) 70%, transparent));
+  border-right: 1px solid var(--hairline);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--shadow-1);
 }}
 
 label, .stTextInput, .stSelectbox, .stNumberInput, .stSlider {{
   color: var(--text);
 }}
 div[data-baseweb="input"] > div {{
-  background: var(--glass);
-  border-radius: 10px;
-  border: 1px solid var(--glass-stroke);
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--glass-tint) 82%, transparent),
+      color-mix(in oklab, var(--glass-tint) 66%, transparent));
+  border-radius: 10px; border: 1px solid var(--hairline);
 }}
 
 ::-webkit-scrollbar {{ width: 10px; height: 10px; }}
 ::-webkit-scrollbar-track {{ background: transparent; }}
 ::-webkit-scrollbar-thumb {{
-  background: color-mix(in oklab, CanvasText 30%, transparent);
-  border-radius: 6px;
+  background: var(--hairline-strong); border-radius: 6px;
 }}
 ::-webkit-scrollbar-thumb:hover {{
-  background: color-mix(in oklab, CanvasText 50%, transparent);
+  background: color-mix(in oklab, CanvasText 50%, var(--hairline-strong));
 }}
 
 *:focus-visible {{
   outline: 2px solid color-mix(in oklab, CanvasText 55%, var(--text));
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline-offset: 2px; border-radius: 4px;
 }}
 
 iframe[title="streamlit_echarts.st_echarts"] {{
-  min-height: 160px !important;
-  width: 100% !important;
-  display: block !important;
+  min-height: 160px !important; width: 100% !important; display: block !important;
 }}
 
+/* Motion preferences */
 @media (prefers-reduced-motion: reduce) {{
-  .card, .gauge-container, .chart-wrap, .status-indicator {{
+  .card, .gauge-container, .status-indicator,
+  .stButton > button, div[data-testid="stDownloadButton"] > button {{
     transition: none !important;
+    transform: none !important;
   }}
 }}
 </style>
 """
 
 
-def get_liquid_glass_js():
-    # Minimal micro-interactions (tilt/parallax), disabled if reduced motion
+def inject_interaction_js():
+    # Minimal JS for subtle parallax + tilt, disabled if user prefers reduced motion
     return """
 <script>
-(function(){
+(function () {
   try {
-    const prefersReduced =
-      window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) return;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReduced) {
+      let sx = 0, sy = 0;
+      const updateParallax = () => {
+        const y = window.scrollY || 0;
+        const x = (window.scrollX || 0);
+        // Gentle, scroll-linked
+        document.documentElement.style.setProperty('--parallaxX', `${x * 0.02}px`);
+        document.documentElement.style.setProperty('--parallaxY', `${y * 0.04}px`);
+      };
+      window.addEventListener('scroll', () => {
+        window.requestAnimationFrame(updateParallax);
+      }, { passive: true });
+      updateParallax();
 
-    const tiltSelectors = ['.card', '.gauge-container', '.chart-wrap'];
-    const maxTilt = 4; // degrees
-    function handleMouseMove(e) {
-      const rect = this.getBoundingClientRect();
-      const px = (e.clientX - rect.left) / rect.width;
-      const py = (e.clientY - rect.top) / rect.height;
-      const rx = (py - 0.5) * -maxTilt;
-      const ry = (px - 0.5) * maxTilt;
-      this.style.transform =
-        `translateY(-2px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-    }
-    function resetTilt() {
-      this.style.transform = 'translateY(-2px)';
-    }
-    tiltSelectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => {
-        el.addEventListener('mousemove', handleMouseMove, {passive: true});
-        el.addEventListener('mouseleave', resetTilt, {passive: true});
+      // Subtle tilt on interactive glass elements
+      const tiltEls = Array.from(document.querySelectorAll(
+        '.card, .gauge-container, .status-indicator, [data-testid="stMetric"]'
+      ));
+      const tilt = (el, ev) => {
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = (ev.clientX - cx) / rect.width;
+        const dy = (ev.clientY - cy) / rect.height;
+        const rx = (dy * -6).toFixed(2);
+        const ry = (dx * 6).toFixed(2);
+        el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
+      };
+      const reset = (el) => {
+        el.style.transform = '';
+      };
+      tiltEls.forEach((el) => {
+        el.addEventListener('mousemove', (e) => tilt(el, e));
+        el.addEventListener('mouseleave', () => reset(el));
       });
-    });
-
-    // Subtle scroll parallax on background
-    const app = document.querySelector('[data-testid="stAppViewContainer"]');
-    if (app) {
-      let ticking = false;
-      window.addEventListener('scroll', function() {
-        if (ticking) return;
-        window.requestAnimationFrame(function() {
-          const y = window.scrollY || 0;
-          app.style.backgroundPosition =
-            `center ${Math.round(y * 0.06)}px, right ${Math.round(y * 0.04)}px, center 0`;
-          ticking = false;
-        });
-        ticking = true;
-      }, {passive: true});
     }
-  } catch(e) {}
+  } catch (e) {}
 })();
 </script>
 """
 
 
-# Apply CSS + JS
+# Apply CSS + interaction JS
 st.markdown(get_theme_aware_css(), unsafe_allow_html=True)
-st.markdown(get_liquid_glass_js(), unsafe_allow_html=True)
+st.markdown(inject_interaction_js(), unsafe_allow_html=True)
 
 # Logger setup
 def setup_terminal_logging():
@@ -785,8 +804,7 @@ class EnhancedTelemetryManager:
                     range_end = offset + SUPABASE_MAX_ROWS_PER_REQUEST - 1
 
                     self.logger.info(
-                        f"📄 Fetching page {request_count + 1}: rows "
-                        f"{offset}-{range_end}"
+                        f"📄 Fetching page {request_count + 1}: rows {offset}-{range_end}"
                     )
 
                     response = (
@@ -844,8 +862,7 @@ class EnhancedTelemetryManager:
                 df = pd.DataFrame(all_data)
                 df["data_source"] = data_source
                 self.logger.info(
-                    f"✅ Successfully fetched {len(df)} total rows for session "
-                    f"{session_id[:8]}..."
+                    f"✅ Successfully fetched {len(df)} total rows for session {session_id[:8]}..."
                 )
                 return df
             else:
@@ -902,8 +919,7 @@ class EnhancedTelemetryManager:
 
                 except Exception as e:
                     self.logger.error(
-                        f"❌ Error fetching session records at offset {offset}: "
-                        f"{e}"
+                        f"❌ Error fetching session records at offset {offset}: {e}"
                     )
                     break
 
@@ -959,8 +975,7 @@ class EnhancedTelemetryManager:
                     )
                 except Exception as e:
                     self.logger.error(
-                        f"❌ Error processing session "
-                        f"{session_info['session_id']}: {e}"
+                        f"❌ Error processing session {session_info['session_id']}: {e}"
                     )
 
             sorted_sessions = sorted(
@@ -1075,7 +1090,7 @@ def initialize_session_state():
         "data_quality_notifications": [],
     }
 
-    for key, value in defaults.items:
+    for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
@@ -1211,26 +1226,27 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
                 kpis["total_distance_km"] / kpis["total_energy_kwh"]
             )
 
-        # Battery mapping:
-        #  - Absolute system max is 65 V (not used for %)
-        #  - 58.5 V = 100% SOC
-        #  - 50.4 V = 0% SOC
-        #  - Clamp and leave a tiny cap gap to avoid visual clipping
+        # Battery percentage mapping:
+        # 50.4 V -> 0% , 58.5 V -> 100% (clamped); absolute max voltage is 65 V (for reference)
         if "voltage_v" in df.columns:
             voltage_data = df["voltage_v"].dropna()
             if not voltage_data.empty:
                 kpis["battery_voltage_v"] = max(0, float(voltage_data.iloc[-1]))
-                full_v = 58.5
-                min_v = 50.4
+                min_voltage = 50.4
+                full_voltage = 58.5
                 cv = kpis["battery_voltage_v"]
-                if cv >= full_v:
-                    percent = 100.0
-                elif cv <= min_v:
-                    percent = 0.0
+                if cv <= min_voltage:
+                    kpis["battery_percentage"] = 0.0
+                elif cv >= full_voltage:
+                    kpis["battery_percentage"] = 100.0
                 else:
-                    percent = ((cv - min_v) / (full_v - min_v)) * 100.0
-                # Tiny safety gap so the gauge never hard-slams 100 visually
-                kpis["battery_percentage"] = min(99.8, max(0.0, percent))
+                    kpis["battery_percentage"] = (
+                        (cv - min_voltage) / (full_voltage - min_voltage) * 100.0
+                    )
+                # Clamp (safety)
+                kpis["battery_percentage"] = float(
+                    max(0.0, min(100.0, kpis["battery_percentage"]))
+                )
 
         if "current_a" in df.columns:
             curr_data = df["current_a"].dropna()
@@ -1262,6 +1278,7 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
 # ---------------------------
 # ECharts Utilities / Options
 # ---------------------------
+
 
 def _rgb_tuple(hex_color: str) -> Tuple[int, int, int]:
     try:
@@ -1336,24 +1353,18 @@ def _echarts_responsive_events() -> Dict[str, str]:
         "  }"
         "  if(typeof IntersectionObserver!=='undefined'){"
         "    try{var io=new IntersectionObserver(function(es){"
-        "      for(var i=0;i<es.length;i++){if(es[i].isIntersecting){"
-        "        setTimeout(safe,60);setTimeout(safe,180);}}"
+        "      for(var i=0;i<es.length;i++){if(es[i].isIntersecting){setTimeout(safe,60);setTimeout(safe,180);}}"
         "    },{root:null,threshold:0}); io.observe(el);}catch(e){}"
         "  }"
         "  if(typeof MutationObserver!=='undefined'){"
         "    try{var tablist=document.querySelector('[data-baseweb=\"tab-list\"]');"
-        "    if(tablist){var mo=new MutationObserver(function(){"
-        "      setTimeout(safe,60);setTimeout(safe,180);});"
-        "      mo.observe(tablist,{attributes:true,subtree:true,"
-        "      attributeFilter:['aria-selected','aria-hidden','style']});}"
+        "    if(tablist){var mo=new MutationObserver(function(){setTimeout(safe,60);setTimeout(safe,180);});"
+        "      mo.observe(tablist,{attributes:true,subtree:true,attributeFilter:['aria-selected','aria-hidden','style']});}"
         "    }catch(e){}"
         "  }"
-        "  document.addEventListener('visibilitychange', function(){"
-        "    setTimeout(safe,60)});"
-        "  var tries=0; var iv=setInterval(function(){"
-        "    var r=el.getBoundingClientRect();"
-        "    if(r.width>0&&r.height>0){safe();clearInterval(iv);} "
-        "    if(++tries>60){clearInterval(iv);}},150);"
+        "  document.addEventListener('visibilitychange', function(){setTimeout(safe,60)});"
+        "  var tries=0; var iv=setInterval(function(){var r=el.getBoundingClientRect();"
+        "    if(r.width>0&&r.height>0){safe();clearInterval(iv);} if(++tries>60){clearInterval(iv);}},150);"
         "  el.__t3_hooks__=true;"
         "}"
         "return null;}catch(e){return null;}"
@@ -1376,6 +1387,7 @@ def _st_echarts_render(options: Dict[str, Any], height_px: int, key: str):
 # Gauges (ECharts)
 # ---------------------------
 
+
 def create_small_gauge_option(
     value: float,
     max_val: Optional[float],
@@ -1388,13 +1400,16 @@ def create_small_gauge_option(
     if max_val is None or max_val <= 0:
         max_val = value * 1.2 if value > 0 else 1.0
 
-    # Leave a tiny limit gap so pointer doesn't overlap stroke cap
     v = float(value or 0.0)
     mx = float(max_val)
-    v = min(v, mx - (mx * 0.002))
 
     r, g, b = _rgb_tuple(color_hex)
     color = f"rgb({r},{g},{b})"
+
+    # Inline JS formatter with optional suffix
+    formatter_js = (
+        f"function(v){{return (Number(v).toFixed(1) + '{suffix}');}}"
+    )
 
     main_series = {
         "type": "gauge",
@@ -1408,7 +1423,7 @@ def create_small_gauge_option(
                 "width": 10,
                 "color": [
                     [0.6, f"rgba({r},{g},{b},0.12)"],
-                    [1.0, f"rgba({r},{g},{b},0.26)"],
+                    [1.0, f"rgba({r},{g},{b},0.28)"],
                 ],
             }
         },
@@ -1421,16 +1436,14 @@ def create_small_gauge_option(
             "size": 8,
             "itemStyle": {"color": "#fff"},
         },
-        "pointer": {"length": "60%", "width": 4, "itemStyle": {"color": color}},
+        "pointer": {"length": "58%", "width": 4, "itemStyle": {"color": color}},
         "title": {"show": False},
         "detail": {
-            "valueAnimation": False,
+            "valueAnimation": False,  # no number animation
             "offsetCenter": [0, "60%"],
             "fontSize": 16,
             "fontWeight": "bold",
-            "formatter": JsCode(
-                "function(v){return Number(v).toFixed(1);}"
-            ).js_code,
+            "formatter": JsCode(formatter_js).js_code,
             "color": "#333",
         },
         "data": [{"value": v, "name": title}],
@@ -1458,8 +1471,7 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[0]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">'
-            "🚀 Speed (km/h)</div>",
+            '<div class="gauge-container"><div class="gauge-title">🚀 Speed (km/h)</div>',
             unsafe_allow_html=True,
         )
         opt = create_small_gauge_option(
@@ -1474,20 +1486,19 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[1]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">'
-            "🔋 Battery (%)</div>",
+            '<div class="gauge-container"><div class="gauge-title">🔋 Battery (%)</div>',
             unsafe_allow_html=True,
         )
+        # Add a small safety gap by setting max slightly > 100
         opt = create_small_gauge_option(
-            kpis["battery_percentage"], 100, "Battery", "#2ca02c", suffix="%"
+            kpis["battery_percentage"], 102, "Battery", "#2ca02c", suffix="%"
         )
         _st_echarts_render(opt, 140, key=f"{unique_ns}_gauge_battery")
         st.markdown("</div>", unsafe_allow_html=True)
 
     with cols[2]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">'
-            "💡 Avg Power (W)</div>",
+            '<div class="gauge-container"><div class="gauge-title">💡 Avg Power (W)</div>',
             unsafe_allow_html=True,
         )
         opt = create_small_gauge_option(
@@ -1502,8 +1513,7 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[3]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">'
-            "♻️ Efficiency (km/kWh)</div>",
+            '<div class="gauge-container"><div class="gauge-title">♻️ Efficiency (km/kWh)</div>',
             unsafe_allow_html=True,
         )
         eff_val = kpis["efficiency_km_per_kwh"]
@@ -1519,8 +1529,7 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[4]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">'
-            "🔄 Roll (°)</div>",
+            '<div class="gauge-container"><div class="gauge-title">🔄 Roll (°)</div>',
             unsafe_allow_html=True,
         )
         roll_max = (
@@ -1536,8 +1545,7 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[5]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">'
-            "📐 Pitch (°)</div>",
+            '<div class="gauge-container"><div class="gauge-title">📐 Pitch (°)</div>',
             unsafe_allow_html=True,
         )
         pitch_max = (
@@ -1568,6 +1576,7 @@ def render_kpi_header(
         st.metric("🔋 Energy", f"{kpis['total_energy_kwh']:.2f} kWh")
 
     with col3:
+        # Voltage metric (max voltage for reference is 65 V)
         st.metric("⚡ Voltage", f"{kpis['battery_voltage_v']:.1f} V")
         st.metric("🔄 Current", f"{kpis['c_current_a']:.1f} A")
 
@@ -1582,6 +1591,7 @@ def render_kpi_header(
 # ---------------------------
 # Charts (ECharts)
 # ---------------------------
+
 
 def _add_datazoom(
     opt: Dict[str, Any], x_indices: List[int], y_indices: Optional[List[int]] = None
@@ -1733,9 +1743,7 @@ def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     ts = _ts_to_iso_list(df2["timestamp"])
 
     def col(v):
-        return [
-            _num_or_none(x) for x in pd.to_numeric(df2[v], errors="coerce")
-        ]
+        return [_num_or_none(x) for x in pd.to_numeric(df2[v], errors="coerce")]
 
     gx, gy, gz = col("gyro_x"), col("gyro_y"), col("gyro_z")
     ax, ay, az = col("accel_x"), col("accel_y"), col("accel_z")
@@ -2059,11 +2067,9 @@ def create_efficiency_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
         "tooltip": {
             "trigger": "item",
             "formatter": JsCode(
-                "function(p){return 'Speed: ' + "
-                "(p.value[0]==null?'N/A':p.value[0].toFixed(2)) + ' m/s<br/>' +"
-                "'Power: ' + (p.value[1]==null?'N/A':p.value[1].toFixed(1)) + ' W'"
-                "+ (p.value[2]==null ? '' : '<br/>Voltage: ' + "
-                "p.value[2].toFixed(1) + ' V');}"
+                "function(p){return 'Speed: ' + (p.value[0]==null?'N/A':p.value[0].toFixed(2)) + ' m/s<br/>' +"
+                "'Power: ' + (p.value[1]==null?'N/A':p.value[1].toFixed(1)) + ' W' +"
+                "(p.value[2]==null ? '' : '<br/>Voltage: ' + p.value[2].toFixed(1) + ' V');}"
             ).js_code,
         },
         "grid": {
@@ -2168,12 +2174,7 @@ def create_dynamic_chart_option(
                 "inRange": {"color": ["#67001f", "#f7f7f7", "#053061"]},
             },
             "series": [
-                {
-                    "name": "corr",
-                    "type": "heatmap",
-                    "data": data,
-                    "label": {"show": False},
-                }
+                {"name": "corr", "type": "heatmap", "data": data, "label": {"show": False}}
             ],
             "animation": True,
             "useDirtyRect": True,
@@ -2203,7 +2204,11 @@ def create_dynamic_chart_option(
         centers = (edges[:-1] + edges[1:]) / 2.0
         src = [[float(centers[i]), int(hist[i])] for i in range(len(hist))]
         opt = {
-            "title": {"text": f"Distribution of {y_col}", "left": "center", "top": 6},
+            "title": {
+                "text": f"Distribution of {y_col}",
+                "left": "center",
+                "top": 6,
+            },
             "tooltip": {"trigger": "axis"},
             "grid": {
                 "left": "6%",
@@ -2318,9 +2323,8 @@ def analyze_data_quality(df: pd.DataFrame, is_realtime: bool):
 
             if time_since_last > threshold:
                 notifications.append(
-                    f"🚨 **Data Stream Stalled:** No new data received for "
-                    f"{int(time_since_last)}s. The data bridge might be "
-                    f"disconnected. (Expected update every ~{avg_rate:.1f}s)"
+                    f"🚨 **Data Stream Stalled:** No new data received for {int(time_since_last)}s. "
+                    f"The data bridge might be disconnected. (Expected update every ~{avg_rate:.1f}s)"
                 )
         except Exception as e:
             logger.warning(f"Could not perform stale data check: {e}")
@@ -2363,9 +2367,8 @@ def analyze_data_quality(df: pd.DataFrame, is_realtime: bool):
     if all_sensors_failing and len(failing_sensors) > 3:
         notifications.append(
             "🚨 **Critical Alert:** Multiple sensors (including "
-            f"{', '.join(failing_sensors[:3])}...) are reporting static or "
-            "zero values. This could indicate a major issue with the data "
-            "bridge or power."
+            f"{', '.join(failing_sensors[:3])}...) are reporting static or zero values. "
+            "This could indicate a major issue with the data bridge or power."
         )
     elif failing_sensors:
         sensor_list = ", ".join(failing_sensors)
@@ -2379,32 +2382,53 @@ def analyze_data_quality(df: pd.DataFrame, is_realtime: bool):
 
 # -------- Plotly GPS (OpenStreetMap / Maplibre) --------
 
-def _compute_center_and_zoom_for_mapbox(
-    lats: List[float], lons: List[float]
-) -> Tuple[Dict[str, float], float]:
-    """
-    Approximate center/zoom for Mapbox fallback using ranges and
-    a log-scale zoom heuristic. Clamped to reasonable bounds.
-    References: community formulas/log approach
-    """
+
+def _compute_center_zoom(lats: np.ndarray, lons: np.ndarray) -> Tuple[Dict[str, float], float]:
     lat_min, lat_max = float(np.min(lats)), float(np.max(lats))
     lon_min, lon_max = float(np.min(lons)), float(np.max(lons))
     center = {"lat": (lat_min + lat_max) / 2.0, "lon": (lon_min + lon_max) / 2.0}
 
-    # Convert degree ranges to km (approx), accounting for latitude
-    mean_lat_rad = math.radians(center["lat"])
-    lat_km_per_deg = 110.574  # approx
-    lon_km_per_deg = 111.320 * math.cos(mean_lat_rad)  # varies with latitude
+    # Handle single-point or very small extents
+    lat_delta = max(1e-6, lat_max - lat_min)
+    lon_delta = max(1e-6, lon_max - lon_min)
 
-    dlat_km = max(0.001, (lat_max - lat_min) * lat_km_per_deg)
-    dlon_km = max(0.001, (lon_max - lon_min) * lon_km_per_deg)
-    span_km = max(dlat_km, dlon_km)
+    # Adjust longitude delta by latitude for better approximation
+    lat_rad = max(1e-6, abs(center["lat"]) * np.pi / 180.0)
+    lon_adj = lon_delta * max(0.3, math.cos(lat_rad))
 
-    # Heuristic: zoom ≈ 11.5 - ln(span_km)
-    # Tune and clamp
-    zoom = 11.5 - math.log(span_km)
-    zoom = float(np.clip(zoom, 2.0, 16.0))
-    return center, zoom
+    extent = max(lat_delta, lon_adj)
+
+    # Heuristic mapping from geographic extent to Map zoom level
+    if extent < 0.0008:
+        zoom = 17
+    elif extent < 0.0015:
+        zoom = 16
+    elif extent < 0.003:
+        zoom = 15
+    elif extent < 0.008:
+        zoom = 14
+    elif extent < 0.02:
+        zoom = 13
+    elif extent < 0.05:
+        zoom = 12
+    elif extent < 0.1:
+        zoom = 11
+    elif extent < 0.2:
+        zoom = 10
+    elif extent < 0.5:
+        zoom = 9
+    elif extent < 1.0:
+        zoom = 8
+    elif extent < 2.0:
+        zoom = 7
+    elif extent < 5.0:
+        zoom = 6
+    elif extent < 10.0:
+        zoom = 5
+    else:
+        zoom = 4
+
+    return center, float(zoom)
 
 
 def render_gps_map_plotly(df: pd.DataFrame):
@@ -2448,17 +2472,13 @@ def render_gps_map_plotly(df: pd.DataFrame):
         st.info("No valid GPS coordinates found after filtering")
         return
 
-    # Optional coloring
+    lats = df_filtered["lat"].to_numpy(dtype=float)
+    lons = df_filtered["lon"].to_numpy(dtype=float)
+    center, zoom = _compute_center_zoom(lats, lons)
+
+    # Optional coloring by speed
     speed_col = "speed_ms" if "speed_ms" in df_filtered.columns else None
 
-    lats = df_filtered["lat"].tolist()
-    lons = df_filtered["lon"].tolist()
-    lat_min, lat_max = min(lats), max(lats)
-    lon_min, lon_max = min(lons), max(lons)
-    center_lat = (lat_min + lat_max) / 2.0
-    center_lon = (lon_min + lon_max) / 2.0
-
-    # Preferred Maplibre trace (px.scatter_map). It supports map bounds.
     try:
         fig = px.scatter_map(
             df_filtered,
@@ -2472,23 +2492,10 @@ def render_gps_map_plotly(df: pd.DataFrame):
                 if c in df_filtered.columns
             ],
             height=520,
-            map_style="open-street-map",
         )
-        # Fit to bounds for best visibility
-        fig.update_layout(
-            map=dict(
-                bounds=dict(
-                    west=lon_min, east=lon_max, south=lat_min, north=lat_max
-                ),
-                center=dict(lat=center_lat, lon=center_lon),
-            )
-        )
-        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, uirevision="gps-map")
-        st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True})
+        # Maplibre layout keys
+        fig.update_layout(map=dict(center=center, zoom=zoom, style="open-street-map"))
     except Exception:
-        # Fallback to Mapbox (deprecated in newer Plotly, but kept as fallback)
-        # Compute approximate center/zoom
-        center, zoom = _compute_center_and_zoom_for_mapbox(lats, lons)
         fig = px.scatter_mapbox(
             df_filtered,
             lat="lat",
@@ -2501,23 +2508,25 @@ def render_gps_map_plotly(df: pd.DataFrame):
                 if c in df_filtered.columns
             ],
             height=520,
-            zoom=zoom,
-            center=center,
         )
         fig.update_layout(mapbox_style="open-street-map")
-        fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, uirevision="gps-map")
-        st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True})
+        fig.update_layout(mapbox_center=center, mapbox_zoom=zoom)
+
+    # Keep user zoom/position across reruns
+    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, uirevision="gps-map")
+
+    st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True})
 
 
 # -------- Data Quality Report (Data tab) --------
 
-def _format_span_hms(delta: timedelta) -> str:
-    total_s = int(max(0, delta.total_seconds()))
-    h = total_s // 3600
-    m = (total_s % 3600) // 60
-    s = total_s % 60
-    # Always HH:MM:SS, even for multi-day durations
-    return f"{h}h {m}m {s}s"
+
+def _format_hms(total_seconds: float) -> str:
+    total_seconds = max(0, int(round(total_seconds)))
+    h = total_seconds // 3600
+    m = (total_seconds % 3600) // 60
+    s = total_seconds % 60
+    return f"{h:d}:{m:02d}:{s:02d}"
 
 
 def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
@@ -2540,8 +2549,8 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
                     else 0
                 )
                 report["max_gap_s"] = float(dt.max())
-                # Fit span only as HH:MM:SS (no 'days' string)
-                report["span"] = _format_span_hms(ts.max() - ts.min())
+                span_seconds = (ts.max() - ts.min()).total_seconds()
+                report["span"] = _format_hms(span_seconds)
             else:
                 report["median_dt_s"] = None
                 report["hz"] = None
@@ -2555,6 +2564,7 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
             report["max_gap_s"] = None
             report["span"] = None
 
+    # Missingness for key fields
     key_cols = [
         c
         for c in [
@@ -2573,6 +2583,7 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
         miss[c] = float(df[c].isna().mean()) if c in df.columns else 1.0
     report["missing_rates"] = miss
 
+    # Outliers via simple z-score (>4)
     outlier_cols = [
         c for c in ["speed_ms", "power_w", "voltage_v", "current_a"] if c in df.columns
     ]
@@ -2586,8 +2597,11 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
             outliers[c] = 0
     report["outliers"] = outliers
 
+    # Simple quality score (100 - penalties)
     score = 100.0
-    miss_penalty = sum(miss.values()) / max(1, len(miss)) * 40  # up to -40
+    miss_penalty = (
+        sum(miss.values()) / max(1, len(miss)) * 40
+    )  # up to -40
     dropout_penalty = min(20.0, report.get("dropouts", 0) * 0.2)
     outlier_penalty = min(25.0, sum(outliers.values()) * 0.1)
     score = max(0.0, score - miss_penalty - dropout_penalty - outlier_penalty)
@@ -2596,8 +2610,9 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
 
 
 # ---------------------------
-# Dynamic Charts section
+# Dynamic Charts section (unchanged look)
 # ---------------------------
+
 
 def render_dynamic_charts_section(df: pd.DataFrame):
     if not st.session_state.chart_info_initialized:
@@ -2655,7 +2670,9 @@ def render_dynamic_charts_section(df: pd.DataFrame):
     col1, col2 = st.columns([1, 3])
     with col1:
         if st.button(
-            "➕ Add Chart", key="add_chart_btn", help="Create a new custom chart"
+            "➕ Add Chart",
+            key="add_chart_btn",
+            help="Create a new custom chart",
         ):
             try:
                 new_chart = {
@@ -2800,7 +2817,9 @@ def render_dynamic_charts_section(df: pd.DataFrame):
                         st.error(f"Error rendering chart: {e}")
 
             except Exception as e:
-                st.error(f"Error rendering chart configuration: {e}")
+                st.error(
+                    f"Error rendering chart configuration: {e}"
+                )
 
 
 def main():
@@ -2814,8 +2833,7 @@ def main():
 
     if not ECHARTS_AVAILABLE or not PYECHARTS_AVAILABLE:
         st.error(
-            "ECharts/JsCode component missing. Install: "
-            "pip install streamlit-echarts pyecharts"
+            "ECharts/JsCode component missing. Install: pip install streamlit-echarts pyecharts"
         )
         return
 
@@ -2869,8 +2887,7 @@ def main():
                             st.success("✅ Connected!")
                         elif supabase_connected:
                             st.warning(
-                                "⚠️ Supabase only connected "
-                                "(Ably not available or failed)"
+                                "⚠️ Supabase only connected (Ably not available or failed)"
                             )
                         else:
                             st.error("❌ Failed to connect to any service!")
@@ -3000,8 +3017,7 @@ def main():
                             )
 
                         with st.spinner(
-                            "Loading data for session "
-                            f"{selected_session['session_id'][:8]}..."
+                            f"Loading data for session {selected_session['session_id'][:8]}..."
                         ):
                             historical_df = (
                                 st.session_state.telemetry_manager.get_historical_data(
@@ -3058,9 +3074,7 @@ def main():
 
                     if not current_session_data_from_supabase.empty:
                         st.success(
-                            "✅ Loaded "
-                            f"{len(current_session_data_from_supabase):,} historical "
-                            "points for current session"
+                            f"✅ Loaded {len(current_session_data_from_supabase):,} historical points for current session"
                         )
 
             if new_messages or not current_session_data_from_supabase.empty:
@@ -3082,8 +3096,7 @@ def main():
 
     if st.session_state.is_viewing_historical and st.session_state.selected_session:
         st.markdown(
-            '<div class="historical-notice">📚 Viewing Historical Data - '
-            "No auto-refresh active</div>",
+            '<div class="historical-notice">📚 Viewing Historical Data - No auto-refresh active</div>',
             unsafe_allow_html=True,
         )
         render_session_info(st.session_state.selected_session)
@@ -3114,9 +3127,9 @@ def main():
                 debug_info = {
                     "Data Source Mode": st.session_state.data_source_mode,
                     "Is Viewing Historical": st.session_state.is_viewing_historical,
-                    "Selected Session ID": st.session_state.selected_session[
-                        "session_id"
-                    ][:8]
+                    "Selected Session ID": st.session_state.selected_session["session_id"][
+                        :8
+                    ]
                     + "..."
                     if st.session_state.selected_session
                     else None,
@@ -3200,11 +3213,17 @@ def main():
     with st.container():
         col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
         with col1:
-            st.info("📚 Historical" if st.session_state.is_viewing_historical else "🔴 Real-time")
+            st.info(
+                "📚 Historical"
+                if st.session_state.is_viewing_historical
+                else "🔴 Real-time"
+            )
         with col2:
             st.info(f"📊 {len(df):,} data points available")
         with col3:
-            st.info(f"⏰ Last update: {st.session_state.last_update.strftime('%H:%M:%S')}")
+            st.info(
+                f"⏰ Last update: {st.session_state.last_update.strftime('%H:%M:%S')}"
+            )
         with col4:
             if (
                 st.session_state.data_source_mode == "realtime_session"
