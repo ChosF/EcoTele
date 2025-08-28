@@ -222,43 +222,66 @@ html, body {{
   letter-spacing: .2px;
   text-align: center;
   margin: .35rem 0 1.1rem;
-
-  /* Default: clipped gradient (keeps the original look in dark mode) */
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklab, CanvasText 80%, var(--text)),
-    color-mix(in oklab, CanvasText 50%, var(--text))
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-
-  text-shadow:
-    0 1px 0 rgba(255,255,255,0.15),
-    0 10px 30px rgba(0,0,0,0.18),
-    0 0.4px 0 rgba(41,151,255,0.06),
-    0 -0.4px 0 rgba(255,60,0,0.06);
-
   transition: color 180ms ease, text-shadow 180ms ease, opacity 180ms ease;
+
+  /* Fallback sólido por si el navegador NO soporta background-clip:text */
+  color: rgba(18,22,28,0.98);
+  -webkit-text-fill-color: rgba(18,22,28,0.98);
 }}
 
-/* Stronger light-mode rules for better contrast */
+/* Dark mode: claro/brillante sobre fondo oscuro (mantiene el look original) */
+@media (prefers-color-scheme: dark) {{
+  .main-header {{
+    /* fallback color para dark mode */
+    color: rgba(250,250,250,0.96) !important;
+    -webkit-text-fill-color: rgba(250,250,250,0.96) !important;
+  }}
+
+  /* Si el navegador soporta background-clip:text, aplica gradiente recortado */
+  @supports (-webkit-background-clip: text) {{
+    .main-header {{
+      background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0.96),
+        rgba(220,220,225,0.92)
+      ) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+      text-shadow:
+        0 1px 0 rgba(0,0,0,0.22),
+        0 10px 30px rgba(0,0,0,0.50),
+        0 0.4px 0 rgba(41,151,255,0.06),
+        0 -0.4px 0 rgba(255,60,0,0.06);
+    }}
+  }}
+}}
+
+/* Light mode: gradiente oscuro para buen contraste sobre fondo claro */
 @media (prefers-color-scheme: light) {{
   .main-header {{
-    /* disable clipped gradient and force a solid, dark color for readability */
-    background: none !important;
-    -webkit-background-clip: unset !important;
-    background-clip: unset !important;
-
+    /* fallback color para light mode (en navegadores sin soporte de clip) */
     color: rgba(18,22,28,0.98) !important;
     -webkit-text-fill-color: rgba(18,22,28,0.98) !important;
+  }}
 
-    /* remove any opacity/filter and soften shadow for light backgrounds */
-    opacity: 1 !important;
-    filter: none !important;
-    text-shadow:
-      0 1px 0 rgba(255,255,255,0.85) !important,
-      0 6px 18px rgba(0,0,0,0.06) !important;
+  /* Si el navegador soporta background-clip:text, aplica gradiente oscuro recortado */
+  @supports (-webkit-background-clip: text) {{
+    .main-header {{
+      background: linear-gradient(
+        90deg,
+        rgba(28,34,42,0.98),
+        rgba(44,64,78,0.98)
+      ) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.92),
+        0 6px 18px rgba(0,0,0,0.06);
+    }}
   }}
 }}
 
