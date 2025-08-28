@@ -110,7 +110,7 @@ def get_theme_aware_css():
         "data:image/svg+xml;base64,"
         "PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyMDAnIGhlaWdo"
         "dD0nMjAwJz4KPGZpbHRlciBpZD0nbic+PGZlVHVyYnVsZW5jZSByZXN1bHQ9J25vaXNlJyB0eXBl"
-        "PSfmcmFjdGFsTm9pc2UnIGJhc2VGcmVxdWVuY3k9JzAuOTknIG51bU9jdGF2ZXM9JzQgJy8+PGZl"
+        "PSdmcmFjdGFsTm9pc2UnIGJhc2VGcmVxdWVuY3k9JzAuOTknIG51bU9jdGF2ZXM9JzQgJy8+PGZl"
         "Q29sb3JNYXRyaXggdHlwZT0nbWF0cml4JyB2YWx1ZXM9JzAgMCAwIDAgMCAwIDAgMCAwIDAgMCAw"
         "IDAgMCAwIDAgMCAwIDAgMC4wOTUgMCcgc3VwZXJwcmVzZXJ2YXRpdmU9J3RydWUnLz48L2ZpbHRl"
         "cj4KPHJlY3Qgd2lkdGg9JzEwMCUnIGhlaWdodD0nMTAwJScgZmlsbD0nI2ZmZicgZmlsdGVyPSd1"
@@ -128,6 +128,12 @@ def get_theme_aware_css():
           "Segoe UI Emoji", "Segoe UI Symbol";
 
   /* Core palette and adaptive tints */
+  --bg: Canvas;
+  --text: CanvasText;
+  --text-muted: color-mix(in oklab, CanvasText 60%, Canvas);
+  --text-subtle: color-mix(in oklab, CanvasText 45%, Canvas);
+
+  /* Glass variables */
   --glass-tint: color-mix(in oklab, CanvasText 10%, Canvas);
   --glass-tint-strong: color-mix(in oklab, CanvasText 15%, Canvas);
   --glass-blur: 18px;
@@ -140,9 +146,14 @@ def get_theme_aware_css():
   /* Shadows and glows */
   --shadow-1: 0 8px 24px color-mix(in oklab, CanvasText 12%, transparent);
   --shadow-2: 0 18px 48px color-mix(in oklab, CanvasText 18%, transparent);
+  --edge-glow: 0 0 0 1px color-mix(in oklab, CanvasText 18%, transparent);
 
   /* Accents */
   --accent: #2997ff;
+
+  /* Motion + performance */
+  --hover-lift: translateY(-2px) scale(1.01);
+  --active-press: translateY(0px) scale(0.998);
 
   /* Noise */
   --noise: url('{noise_svg}');
@@ -193,61 +204,50 @@ html, body {{
   z-index: 0;
 }}
 
-[data-testid="stHeader"] .main-header, .main-header {{
+[data-testid="stHeader"] {{
+  background:
+    linear-gradient(90deg,
+      color-mix(in oklab, var(--glass-tint) 65%, transparent),
+      color-mix(in oklab, var(--glass-tint) 65%, transparent)),
+    color-mix(in oklab, Canvas 70%, transparent);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border-bottom: 1px solid var(--hairline);
+  box-shadow: var(--shadow-1);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {{
+  [data-testid="stHeader"] {{
+    background:
+      linear-gradient(90deg,
+        color-mix(in oklab, CanvasText 8%, Canvas),
+        color-mix(in oklab, CanvasText 8%, Canvas));
+  }}
+}}
+
+.main-header {{
   font-size: 2.35rem;
   font-weight: 900;
   letter-spacing: .2px;
   text-align: center;
   margin: .35rem 0 1.1rem;
-  transition: color .18s ease, text-shadow .18s ease, opacity .18s ease;
-
-  /* fallback solid text */
-  color: rgba(18,22,28,0.98);
-  -webkit-text-fill-color: rgba(18,22,28,0.98);
+  background: linear-gradient(90deg,
+    color-mix(in oklab, CanvasText 80%, var(--text)),
+    color-mix(in oklab, CanvasText 50%, var(--text)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.15),
+    0 10px 30px rgba(0,0,0,0.18),
+    /* extremely subtle chromatic separation */
+    0 0.4px 0 rgba(41,151,255,0.06),
+    0 -0.4px 0 rgba(255,60,0,0.06);
 }}
 
-@media (prefers-color-scheme: dark) {{
-  [data-testid="stHeader"] .main-header, .main-header {{
-    color: rgba(250,250,250,0.96) !important;
-    -webkit-text-fill-color: rgba(250,250,250,0.96) !important;
-  }}
-  @supports (-webkit-background-clip: text) {{
-    [data-testid="stHeader"] .main-header, .main-header {{
-      background: linear-gradient(
-        90deg,
-        rgba(255,255,255,0.96) 0%,
-        rgba(220,220,225,0.92) 100%
-      ) !important;
-      -webkit-background-clip: text !important;
-      background-clip: text !important;
-      color: transparent !important;
-      -webkit-text-fill-color: transparent !important;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.22), 0 10px 30px rgba(0,0,0,0.50);
-    }}
-  }}
-}}
-
-@media (prefers-color-scheme: light) {{
-  [data-testid="stHeader"] .main-header, .main-header {{
-    color: rgba(18,22,28,0.98) !important;
-    -webkit-text-fill-color: rgba(18,22,28,0.98) !important;
-  }}
-  @supports (-webkit-background-clip: text) {{
-    [data-testid="stHeader"] .main-header, .main-header {{
-      background: linear-gradient(
-        90deg,
-        #1f2937 0%,
-        #2b3b4d 40%,
-        #3b5066 100%
-      ) !important;
-      -webkit-background-clip: text !important;
-      background-clip: text !important;
-      color: transparent !important;
-      -webkit-text-fill-color: transparent !important;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.95), 0 4px 14px rgba(0,0,0,0.06);
-    }}
-  }}
-}}
 .status-indicator {{
   display: flex; align-items: center; justify-content: center;
   padding: .55rem .9rem; border-radius: 999px; font-weight: 700; font-size: .9rem;
@@ -540,7 +540,6 @@ iframe[title="streamlit_echarts.st_echarts"] {{
 }}
 </style>
 """
-
 
 def inject_interaction_js():
     # Minimal JS for subtle parallax + tilt, disabled if user prefers reduced motion
@@ -2744,7 +2743,7 @@ def main():
         data_source_mode = st.radio(
             "📊 Data Source",
             options=["realtime_session", "historical"],
-            format_func=lambda x: "🔴 Real-time + Session Data"
+            format_func=lambda x: "🔴 Real-time"
             if x == "realtime_session"
             else "📚 Historical Data",
             key="data_source_mode_radio",
@@ -2761,7 +2760,7 @@ def main():
         if st.session_state.data_source_mode == "realtime_session":
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("🔌 Connect", use_container_width=True):
+                if st.button("🔌Connect", use_container_width=True):
                     if st.session_state.telemetry_manager:
                         st.session_state.telemetry_manager.disconnect()
                         time.sleep(0.5)
@@ -2783,7 +2782,7 @@ def main():
                     st.rerun()
 
             with col2:
-                if st.button("🛑 Disconnect", use_container_width=True):
+                if st.button("🛑 DC", use_container_width=True):
                     if st.session_state.telemetry_manager:
                         st.session_state.telemetry_manager.disconnect()
                         st.session_state.telemetry_manager = None
