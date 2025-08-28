@@ -222,33 +222,45 @@ html, body {{
   letter-spacing: .2px;
   text-align: center;
   margin: .35rem 0 1.1rem;
-  background: linear-gradient(90deg,
+
+  /* Default: clipped gradient (keeps the original look in dark mode) */
+  background: linear-gradient(
+    90deg,
     color-mix(in oklab, CanvasText 80%, var(--text)),
-    color-mix(in oklab, CanvasText 50%, var(--text)));
+    color-mix(in oklab, CanvasText 50%, var(--text))
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+
   text-shadow:
     0 1px 0 rgba(255,255,255,0.15),
     0 10px 30px rgba(0,0,0,0.18),
     0 0.4px 0 rgba(41,151,255,0.06),
     0 -0.4px 0 rgba(255,60,0,0.06);
-  transition: color .18s ease, text-shadow .18s ease, opacity .18s ease;
-}
 
+  transition: color 180ms ease, text-shadow 180ms ease, opacity 180ms ease;
+}}
+
+/* Stronger light-mode rules for better contrast */
 @media (prefers-color-scheme: light) {{
   .main-header {{
+    /* disable clipped gradient and force a solid, dark color for readability */
     background: none !important;
     -webkit-background-clip: unset !important;
     background-clip: unset !important;
-    color: rgba(20,26,32,0.98) !important;
-    -webkit-text-fill-color: rgba(20,26,32,0.98) !important;
+
+    color: rgba(18,22,28,0.98) !important;
+    -webkit-text-fill-color: rgba(18,22,28,0.98) !important;
+
+    /* remove any opacity/filter and soften shadow for light backgrounds */
     opacity: 1 !important;
     filter: none !important;
     text-shadow:
-      0 1px 0 rgba(255,255,255,0.85),
-      0 6px 18px rgba(0,0,0,0.06);
+      0 1px 0 rgba(255,255,255,0.85) !important,
+      0 6px 18px rgba(0,0,0,0.06) !important;
   }}
+}}
 }
 }}
 
