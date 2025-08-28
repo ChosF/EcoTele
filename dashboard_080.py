@@ -547,7 +547,9 @@ iframe[title="streamlit_echarts.st_echarts"] {{
         text-shadow: 0 1px 0 rgba(255,255,255,0.9) !important;
       }}
     }}
-
+@media (prefers-color-scheme: light) {{
+      .main-header {{ outline: 3px solid rgba(255,0,0,0.8) !important; }}
+    }}
 }}
 </style>
 """
