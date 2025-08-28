@@ -507,7 +507,7 @@ div[data-testid="stMetric"] [data-testid="stMetricDelta"] {{
   -webkit-overflow-scrolling: touch;
   /* Avoid content clipped behind bottom */
   padding-bottom: 1rem;
-}
+
 }}
 
 label, .stTextInput, .stSelectbox, .stNumberInput, .stSlider {{
