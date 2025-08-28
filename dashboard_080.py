@@ -2760,7 +2760,7 @@ def main():
         if st.session_state.data_source_mode == "realtime_session":
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("🔌Connect", use_container_width=True):
+                if st.button("🔌CON", use_container_width=True):
                     if st.session_state.telemetry_manager:
                         st.session_state.telemetry_manager.disconnect()
                         time.sleep(0.5)
