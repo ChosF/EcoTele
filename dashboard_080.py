@@ -526,21 +526,25 @@ iframe[title="streamlit_echarts.st_echarts"] {{
     transform: none !important;
   }}
 @media (prefers-color-scheme: light) {{
+      /* Target the Streamlit header and the .main-header element */
+      [data-testid="stHeader"] .main-header,
       .main-header {{
-        /* darker gradient while keeping text clipped to the gradient */
-        background: linear-gradient(
-          90deg,
-          color-mix(in oklab, CanvasText 48%, var(--text)),
-          color-mix(in oklab, CanvasText 28%, var(--text))
-        ) !important;
+        /* remove clipped gradient so text becomes a solid, readable color */
+        background-image: none !important;
+        background: none !important;
+        -webkit-background-clip: unset !important;
+        background-clip: unset !important;
 
-        -webkit-background-clip: text !important;
-        background-clip: text !important;
-        color: transparent !important;
-        -webkit-text-fill-color: transparent !important;
+        /* dark text for high contrast in light mode */
+        color: rgba(26, 32, 38, 0.96) !important;
+        -webkit-text-fill-color: rgba(26, 32, 38, 0.96) !important;
 
-        /* subtle shadow so the text keeps depth but stays readable */
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        /* cancel any opacity / filter applied elsewhere */
+        opacity: 1 !important;
+        filter: none !important;
+
+        /* subtle readable shadow */
+        text-shadow: 0 1px 0 rgba(255,255,255,0.9) !important;
       }}
     }}
 
