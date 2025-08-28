@@ -1142,6 +1142,7 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
         "total_energy_kwh": 0.0,
         "avg_power_w": 0.0,
         "c_current_a": 0.0,
+        "current_power_w": 0.0,
         "efficiency_km_per_kwh": 0.0,
         "battery_voltage_v": 0.0,
         "battery_percentage": 0.0,
@@ -1204,7 +1205,16 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
             power_data = df["power_w"].dropna()
             if not power_data.empty:
                 kpis["avg_power_w"] = max(0, float(power_data.mean()))
-
+                # expose current (most recent) and max power for gauges / UI
+                try:
+                    kpis["current_power_w"] = max(0.0, float(power_data.iloc[-1]))
+                except Exception:
+                    kpis["current_power_w"] = float(kpis["avg_power_w"])
+                try:
+                    kpis["max_power_w"] = max(0.0, float(power_data.max()))
+                except Exception:
+                    kpis["max_power_w"] = float(kpis["avg_power_w"])
+                    
         if kpis["total_energy_kwh"] > 0:
             kpis["efficiency_km_per_kwh"] = (
                 kpis["total_distance_km"] / kpis["total_energy_kwh"]
@@ -1462,9 +1472,19 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
             '<div class="gauge-container"><div class="gauge-title">💡 Power (W)</div>',
             unsafe_allow_html=True,
         )
+        # Use the most-recent measured power (current_power_w). Fall back to avg
+        current_power = kpis.get("current_power_w", kpis.get("avg_power_w", 0.0))
+        # Choose a reasonable maximum for the gauge (use observed max if present)
+        max_power = max(
+            100,
+            kpis.get("max_power_w", current_power * 1.5 if current_power > 0 else 100),
+        )
         opt = create_small_gauge_option(
-            kpis["avg_power_w"], max_val=max(1000, kpis["power_w"] * 2 + 1), title="Power",
-            color_hex="#ff7f0e", suffix=""
+            current_power,
+            max_val=max_power,
+            title="Power",
+            color_hex="#ff7f0e",
+            suffix=" W",
         )
         _st_echarts_render(opt, 140, key=f"{unique_ns}_gauge_power")
         st.markdown("</div>", unsafe_allow_html=True)
