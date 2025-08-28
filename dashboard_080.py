@@ -1459,11 +1459,11 @@ def render_live_gauges(kpis: Dict[str, float], unique_ns: str = "gauges"):
 
     with cols[2]:
         st.markdown(
-            '<div class="gauge-container"><div class="gauge-title">💡 Avg Power (W)</div>',
+            '<div class="gauge-container"><div class="gauge-title">💡 Power (W)</div>',
             unsafe_allow_html=True,
         )
         opt = create_small_gauge_option(
-            kpis["avg_power_w"], max_val=max(1000, kpis["avg_power_w"] * 2 + 1), title="Power",
+            kpis["avg_power_w"], max_val=max(1000, kpis["power_w"] * 2 + 1), title="Power",
             color_hex="#ff7f0e", suffix=""
         )
         _st_echarts_render(opt, 140, key=f"{unique_ns}_gauge_power")
