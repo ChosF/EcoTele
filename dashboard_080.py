@@ -499,12 +499,14 @@ div[data-testid="stMetric"] [data-testid="stMetricDelta"] {{
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   box-shadow: var(--shadow-1);
-  
-  height: 100vh;
-  overflow-y: auto;
+  /* Ensure sidebar content is scrollable and never overflows the viewport */
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 1.5rem;
+  /* Avoid content clipped behind bottom */
+  padding-bottom: 1rem;
 }
 }}
 
@@ -2194,9 +2196,7 @@ def render_gps_map_plotly(df: pd.DataFrame):
     )
     time_col = _find_col(df, ["timestamp", "time", "ts", "time_utc", "created_at", "datetime", "date"])
 
-    if not lat_col or not lon_col:
-        st.info("No GPS coordinate columns found (lat/lon)")
-        return
+    # We'll render altitude even if lat/lon are missing, and vice versa.
 
     # Normalize working DataFrame
     dfw = df.copy()
@@ -2222,34 +2222,63 @@ def render_gps_map_plotly(df: pd.DataFrame):
     if "power_w" in dfw.columns:
         dfw["power_w"] = pd.to_numeric(dfw["power_w"], errors="coerce")
 
-    # Filtering logic (keep from provided code)
-    initial_count = len(dfw)
-    valid_mask = (
-        (~dfw["latitude"].isna())
-        & (~dfw["longitude"].isna())
-        & (dfw["latitude"].abs() <= 90)
-        & (dfw["longitude"].abs() <= 180)
-    )
-    near_zero_mask = (dfw["latitude"].abs() < 1e-6) & (dfw["longitude"].abs() < 1e-6)
-    valid_mask = valid_mask & (~near_zero_mask)
-
-    df_filtered = dfw.loc[valid_mask].copy()
-    filtered_count = len(df_filtered)
-
-    if initial_count > 0 and filtered_count < initial_count:
-        st.warning(
-            f"🛰️ GPS Signal Issue: Excluded {initial_count - filtered_count:,} rows with invalid or out-of-range coordinates."
+    # Filtering for map (lat/lon) and altitude handled independently
+    df_map = pd.DataFrame()
+    filtered_out = 0
+    if lat_col and lon_col:
+        initial_count = len(dfw)
+        valid_mask = (
+            (~dfw["latitude"].isna())
+            & (~dfw["longitude"].isna())
+            & (dfw["latitude"].abs() <= 90)
+            & (dfw["longitude"].abs() <= 180)
         )
+        near_zero_mask = (dfw["latitude"].abs() < 1e-6) & (
+            dfw["longitude"].abs() < 1e-6
+        )
+        valid_mask = valid_mask & (~near_zero_mask)
+        df_map = dfw.loc[valid_mask].copy()
+        filtered_out = initial_count - len(df_map)
 
-    if df_filtered.empty:
-        st.info("No valid GPS coordinates found after filtering")
-        return
+        # Sort by timestamp for proper sequencing
+        if (
+            "timestamp" in df_map.columns
+            and not df_map["timestamp"].isna().all()
+        ):
+            df_map = df_map.sort_values("timestamp").reset_index(drop=True)
+        else:
+            df_map = df_map.reset_index(drop=True)
 
-    # Sort by timestamp for proper sequencing
-    if "timestamp" in df_filtered.columns and not df_filtered["timestamp"].isna().all():
-        df_filtered = df_filtered.sort_values("timestamp").reset_index(drop=True)
-    else:
-        df_filtered = df_filtered.reset_index(drop=True)
+        # Optional: drop unrealistic jumps (simple speed threshold)
+        try:
+            if "timestamp" in df_map.columns and len(df_map) > 3:
+                lat_rad = np.radians(df_map["latitude"].to_numpy())
+                lon_rad = np.radians(df_map["longitude"].to_numpy())
+                dlat = np.diff(lat_rad)
+                dlon = np.diff(lon_rad)
+                a = (
+                    np.sin(dlat / 2) ** 2
+                    + np.cos(lat_rad[:-1])
+                    * np.cos(lat_rad[1:])
+                    * np.sin(dlon / 2) ** 2
+                )
+                c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+                R = 6371000.0  # Earth radius in meters
+                dist = R * c  # meters
+                ts = df_map["timestamp"].astype("int64").to_numpy() // 1_000_000_000
+                dt = np.diff(ts).astype(float)
+                dt[dt <= 0] = np.nan
+                spd = dist / dt  # m/s
+                # Keep first point by default; mark points with insane speeds as invalid
+                speed_ok = np.insert(spd <= 65.0, 0, True)  # ~234 km/h cap
+                df_map = df_map.loc[speed_ok].reset_index(drop=True)
+        except Exception:
+            pass
+
+        if filtered_out > 0:
+            st.warning(
+                f"🛰️ GPS Signal Issue: Excluded {filtered_out:,} rows with invalid or out-of-range coordinates."
+            )
 
     # Altitude cleaning 
     def _clean_altitude_series(
@@ -2359,10 +2388,21 @@ def render_gps_map_plotly(df: pd.DataFrame):
         s_final = pd.to_numeric(s_final, errors="coerce")
         return s_final
 
-    initial_alt_rows = df_filtered["altitude"].dropna().shape[0]
+    # Altitude: compute independently of map validity so it shows even if lat/lon are bad
+    df_alt = dfw.copy()
+    if "timestamp" in df_alt.columns and not df_alt["timestamp"].isna().all():
+        df_alt = df_alt.sort_values("timestamp").reset_index(drop=True)
+    else:
+        df_alt = df_alt.reset_index(drop=True)
+
+    initial_alt_rows = (
+        df_alt["altitude"].dropna().shape[0] if "altitude" in df_alt.columns else 0
+    )
     altitude_clean = _clean_altitude_series(
-        df_filtered["altitude"],
-        timestamps=df_filtered["timestamp"] if "timestamp" in df_filtered.columns else None,
+        df_alt["altitude"] if "altitude" in df_alt.columns else pd.Series(dtype=float),
+        timestamps=df_alt["timestamp"]
+        if "timestamp" in df_alt.columns
+        else None,
         abs_min=-500.0,
         abs_max=10000.0,
         iqr_multiplier=3.0,
@@ -2374,12 +2414,17 @@ def render_gps_map_plotly(df: pd.DataFrame):
     )
     final_alt_rows = altitude_clean.dropna().shape[0]
     if initial_alt_rows > final_alt_rows:
-        st.warning(f"⛰️ Altitude Cleanup: removed {initial_alt_rows - final_alt_rows:,} points.")
+        st.warning(
+            f"⛰️ Altitude Cleanup: removed {initial_alt_rows - final_alt_rows:,} points."
+        )
 
     # Auto-zoom center & zoom based on filtered coordinates
-    lats = df_filtered["latitude"].to_numpy(dtype=float)
-    lons = df_filtered["longitude"].to_numpy(dtype=float)
-    center, zoom = _compute_center_zoom(lats, lons)
+    if not df_map.empty:
+        lats = df_map["latitude"].to_numpy(dtype=float)
+        lons = df_map["longitude"].to_numpy(dtype=float)
+        center, zoom = _compute_center_zoom(lats, lons)
+    else:
+        center, zoom = ({"lat": 0.0, "lon": 0.0}, 1.5)
 
     # Build subplot: left map (mapbox) + right altitude time series
     fig = make_subplots(
@@ -2392,19 +2437,33 @@ def render_gps_map_plotly(df: pd.DataFrame):
     )
 
     # Prepare hover customdata: [timestamp_str, speed_ms, current_a, power_w]
-    if "timestamp" in df_filtered.columns:
-        ts_strings = df_filtered["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S").astype(str)
+    if not df_map.empty and "timestamp" in df_map.columns:
+        ts_strings = (
+            df_map["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S").astype(str)
+        )
     else:
-        ts_strings = pd.Series([""] * len(df_filtered), index=df_filtered.index)
+        ts_strings = pd.Series([], dtype=str)
 
-    speed_col = df_filtered["speed_ms"] if "speed_ms" in df_filtered.columns else pd.Series([np.nan] * len(df_filtered))
-    curr_col = df_filtered["current_a"] if "current_a" in df_filtered.columns else pd.Series([np.nan] * len(df_filtered))
-    power_col = df_filtered["power_w"] if "power_w" in df_filtered.columns else pd.Series([np.nan] * len(df_filtered))
-
-    customdata = np.stack(
-        [ts_strings.values, speed_col.values, curr_col.values, power_col.values],
-        axis=-1,
-    )
+    if not df_map.empty:
+        speed_col = (
+            df_map["speed_ms"]
+            if "speed_ms" in df_map.columns
+            else pd.Series([np.nan] * len(df_map))
+        )
+        curr_col = (
+            df_map["current_a"]
+            if "current_a" in df_map.columns
+            else pd.Series([np.nan] * len(df_map))
+        )
+        power_col = (
+            df_map["power_w"]
+            if "power_w" in df_map.columns
+            else pd.Series([np.nan] * len(df_map))
+        )
+        customdata = np.stack(
+            [ts_strings.values, speed_col.values, curr_col.values, power_col.values],
+            axis=-1,
+        )
     hovertemplate = (
         "Time: %{customdata[0]}<br>"
         "Speed: %{customdata[1]:.2f} m/s<br>"
@@ -2413,10 +2472,10 @@ def render_gps_map_plotly(df: pd.DataFrame):
     )
 
     # Color by power if available
-    if "power_w" in df_filtered.columns and not df_filtered["power_w"].isna().all():
+    if not df_map.empty and "power_w" in df_map.columns and not df_map["power_w"].isna().all():
         marker = go.scattermapbox.Marker(
             size=8,
-            color=df_filtered["power_w"],
+            color=df_map["power_w"],
             colorscale="Plasma",
             showscale=True,
             colorbar=dict(title="Power (W)", x=0.55),
@@ -2425,29 +2484,47 @@ def render_gps_map_plotly(df: pd.DataFrame):
         marker = go.scattermapbox.Marker(size=8, color="#1f77b4")
 
     # Add map trace (markers+lines)
-    fig.add_trace(
-        go.Scattermapbox(
-            lat=df_filtered["latitude"],
-            lon=df_filtered["longitude"],
-            mode="markers+lines",
-            marker=marker,
-            line=dict(width=2, color="#1f77b4"),
-            customdata=customdata,
-            hovertemplate=hovertemplate,
-            name="Track",
-        ),
-        row=1,
-        col=1,
-    )
+    if not df_map.empty:
+        fig.add_trace(
+            go.Scattermapbox(
+                lat=df_map["latitude"],
+                lon=df_map["longitude"],
+                mode="markers+lines",
+                marker=marker,
+                line=dict(width=2, color="#1f77b4"),
+                customdata=customdata,
+                hovertemplate=hovertemplate,
+                name="Track",
+            ),
+            row=1,
+            col=1,
+        )
+    else:
+        # Placeholder informative text on the map panel
+        fig.add_trace(
+            go.Scattermapbox(
+                lat=[],
+                lon=[],
+                mode="markers",
+                name="No GPS",
+                hoverinfo="none",
+            ),
+            row=1,
+            col=1,
+        )
 
     # Altitude panel (cleaned preferred, fallback raw, else placeholder)
-    x_axis = df_filtered["timestamp"] if "timestamp" in df_filtered.columns else df_filtered.index
+    x_axis_alt = (
+        df_alt["timestamp"]
+        if "timestamp" in df_alt.columns
+        else df_alt.index
+    )
 
     if final_alt_rows > 0:
-        y_vals = altitude_clean.reindex(df_filtered.index)
+        y_vals = altitude_clean
         fig.add_trace(
             go.Scatter(
-                x=x_axis,
+                x=x_axis_alt,
                 y=y_vals,
                 mode="lines",
                 line=dict(color="#2ca02c", width=2),
@@ -2460,12 +2537,12 @@ def render_gps_map_plotly(df: pd.DataFrame):
         fig.update_yaxes(title_text="Altitude (m)", row=1, col=2)
         fig.update_xaxes(title_text="Time", row=1, col=2)
     else:
-        raw_alt = df_filtered["altitude"].reindex(df_filtered.index)
+        raw_alt = df_alt["altitude"] if "altitude" in df_alt.columns else pd.Series([], dtype=float)
         if raw_alt.dropna().any():
             st.warning("⛰️ Altitude cleaning removed all values — showing raw altitude as fallback.")
             fig.add_trace(
                 go.Scatter(
-                    x=x_axis,
+                    x=x_axis_alt,
                     y=raw_alt,
                     mode="lines",
                     line=dict(color="#ff7f0e", width=2, dash="dash"),
@@ -2479,9 +2556,9 @@ def render_gps_map_plotly(df: pd.DataFrame):
             fig.update_xaxes(title_text="Time", row=1, col=2)
         else:
             last_valid = None
-            if df_filtered["altitude"].dropna().any():
+            if "altitude" in df_alt.columns and df_alt["altitude"].dropna().any():
                 try:
-                    last_valid = float(df_filtered["altitude"].dropna().iloc[-1])
+                    last_valid = float(df_alt["altitude"].dropna().iloc[-1])
                 except Exception:
                     last_valid = None
 
