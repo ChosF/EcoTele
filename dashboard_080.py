@@ -499,6 +499,13 @@ div[data-testid="stMetric"] [data-testid="stMetricDelta"] {{
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   box-shadow: var(--shadow-1);
+  
+  height: 100vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1.5rem;
+}
 }}
 
 label, .stTextInput, .stSelectbox, .stNumberInput, .stSlider {{
@@ -1193,15 +1200,16 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
         kpis = default_kpis.copy()
 
         if "speed_ms" in df.columns:
-            speed_data = df["speed_ms"].dropna()
+            speed_data = pd.to_numeric(df["speed_ms"], errors="coerce").dropna()
             if not speed_data.empty:
-                kpis["current_speed_ms"] = max(0, float(speed_data.iloc[-1]))
-                kpis["max_speed_ms"] = max(0, float(speed_data.max()))
-                kpis["avg_speed_ms"] = max(0, float(speed_data.mean()))
+                default_kpis["current_speed_ms"] = max(0, float(speed_data.iloc[-1]))
+                default_kpis["max_speed_ms"] = max(0, float(speed_data.max()))
+                nz_speed = speed_data[speed_data != 0]
+                default_kpis["avg_speed_ms"] = float(nz_speed.mean()) if not nz_speed.empty else 0.0
 
-        kpis["current_speed_kmh"] = kpis["current_speed_ms"] * 3.6
-        kpis["max_speed_kmh"] = kpis["max_speed_ms"] * 3.6
-        kpis["avg_speed_kmh"] = kpis["avg_speed_ms"] * 3.6
+        default_kpis["current_speed_kmh"] = default_kpis["current_speed_ms"] * 3.6
+        default_kpis["max_speed_kmh"] = default_kpis["max_speed_ms"] * 3.6
+        default_kpis["avg_speed_kmh"] = default_kpis["avg_speed_ms"] * 3.6
 
         if "distance_m" in df.columns and not df["distance_m"].dropna().empty:
             kpis["total_distance_km"] = max(
@@ -1214,18 +1222,12 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
             )
 
         if "power_w" in df.columns:
-            power_data = df["power_w"].dropna()
+            power_data = pd.to_numeric(df["power_w"], errors="coerce").dropna()
             if not power_data.empty:
-                kpis["avg_power_w"] = max(0, float(power_data.mean()))
-                # expose current (most recent) and max power for gauges / UI
-                try:
-                    kpis["current_power_w"] = max(0.0, float(power_data.iloc[-1]))
-                except Exception:
-                    kpis["current_power_w"] = float(kpis["avg_power_w"])
-                try:
-                    kpis["max_power_w"] = max(0.0, float(power_data.max()))
-                except Exception:
-                    kpis["max_power_w"] = float(kpis["avg_power_w"])
+                nz_power = power_data[power_data != 0]
+                default_kpis["avg_power_w"] = float(nz_power.mean()) if not nz_power.empty else 0.0
+                default_kpis["current_power_w"] = float(power_data.iloc[-1])
+                default_kpis["max_power_w"] = float(power_data.max())
                     
         if kpis["total_energy_kwh"] > 0:
             kpis["efficiency_km_per_kwh"] = (
@@ -1253,12 +1255,11 @@ def calculate_kpis(df: pd.DataFrame) -> Dict[str, float]:
                 )
 
         if "current_a" in df.columns:
-            curr_data = df["current_a"].dropna()
+            curr_data = pd.to_numeric(df["current_a"], errors="coerce").dropna()
             if not curr_data.empty:
-                kpis["avg_current_a"] = max(0.0, float(curr_data.mean()))
-                kpis["c_current_a"] = max(0.0, float(curr_data.iloc[-1]))
-            else:
-                kpis["c_current_a"] = 0.0
+                nz_curr = curr_data[curr_data != 0]
+                default_kpis["avg_current_a"] = float(nz_curr.mean()) if not nz_curr.empty else 0.0
+                default_kpis["c_current_a"] = float(curr_data.iloc[-1])
 
         if "roll_deg" in df.columns:
             roll_data = df["roll_deg"].dropna()
@@ -1619,47 +1620,71 @@ def create_speed_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     return _add_datazoom(opt, x_indices=[0])
 
 def create_power_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
-    need = {"voltage_v", "current_a", "power_w"}
-    if df.empty or not need.issubset(df.columns):
+    # Show voltage and current in separate charts
+    if df.empty or (("voltage_v" not in df.columns) and ("current_a" not in df.columns)):
         return {"title": {"text": "No power data available"}, "animation": True}
 
     ts = _ts_to_iso_list(df["timestamp"])
-    volt = [ _num_or_none(v) for v in pd.to_numeric(df["voltage_v"], errors="coerce") ]
-    curr = [ _num_or_none(v) for v in pd.to_numeric(df["current_a"], errors="coerce") ]
-    pwr  = [ _num_or_none(v) for v in pd.to_numeric(df["power_w"], errors="coerce") ]
 
-    src_top = [[t, v, c] for t, v, c in zip(ts, volt, curr)]
-    src_bot = [[t, w] for t, w in zip(ts, pwr)]
+    volt = (
+        [None] * len(df)
+        if "voltage_v" not in df.columns
+        else [ _num_or_none(v) for v in pd.to_numeric(df["voltage_v"], errors="coerce") ]
+    )
+    curr = (
+        [None] * len(df)
+        if "current_a" not in df.columns
+        else [ _num_or_none(v) for v in pd.to_numeric(df["current_a"], errors="coerce") ]
+    )
+
+    src_volt = [[t, v] for t, v in zip(ts, volt)]
+    src_curr = [[t, c] for t, c in zip(ts, curr)]
 
     opt = {
-        "title": {"text": "⚡ Electrical System Performance", "left": "center", "top": 6},
+        "title": {"text": "⚡ Electrical System: Voltage & Current", "left": "center", "top": 6},
         "tooltip": {"trigger": "axis"},
         "legend": {"top": 28},
         "grid": [
-            {"left": "6%", "right": "4%", "top": 60, "height": 180, "containLabel": True},
-            {"left": "6%", "right": "4%", "top": 280, "height": 180, "containLabel": True},
+            {"left": "6%", "right": "4%", "top": 60, "height": 200, "containLabel": True},
+            {"left": "6%", "right": "4%", "top": 300, "height": 200, "containLabel": True},
         ],
         "xAxis": [{"type": "time", "gridIndex": 0}, {"type": "time", "gridIndex": 1}],
         "yAxis": [
-            {"type": "value", "gridIndex": 0, "name": "V / A"},
-            {"type": "value", "gridIndex": 1, "name": "W"},
+            {"type": "value", "gridIndex": 0, "name": "Voltage (V)"},
+            {"type": "value", "gridIndex": 1, "name": "Current (A)"},
         ],
-        "dataset": [{"id": "top", "source": src_top}, {"id": "bot", "source": src_bot}],
+        "dataset": [{"id": "volt", "source": src_volt}, {"id": "curr", "source": src_curr}],
         "series": [
-            {"type": "line", "datasetId": "top", "name": "Voltage (V)", "encode": {"x": 0, "y": 1},
-             "showSymbol": False, "lineStyle": {"width": 2, "color": "#2ca02c"},
-             "sampling": "lttb", "xAxisIndex": 0, "yAxisIndex": 0, "smooth": True},
-            {"type": "line", "datasetId": "top", "name": "Current (A)", "encode": {"x": 0, "y": 2},
-             "showSymbol": False, "lineStyle": {"width": 2, "color": "#d62728"},
-             "sampling": "lttb", "xAxisIndex": 0, "yAxisIndex": 0, "smooth": True},
-            {"type": "line", "datasetId": "bot", "name": "Power (W)", "encode": {"x": 0, "y": 1},
-             "showSymbol": False, "lineStyle": {"width": 2, "color": "#ff7f0e"},
-             "sampling": "lttb", "xAxisIndex": 1, "yAxisIndex": 1, "smooth": True},
+            {
+                "type": "line",
+                "datasetId": "volt",
+                "name": "Voltage (V)",
+                "encode": {"x": 0, "y": 1},
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#2ca02c"},
+                "sampling": "lttb",
+                "xAxisIndex": 0,
+                "yAxisIndex": 0,
+                "smooth": True,
+            },
+            {
+                "type": "line",
+                "datasetId": "curr",
+                "name": "Current (A)",
+                "encode": {"x": 0, "y": 1},
+                "showSymbol": False,
+                "lineStyle": {"width": 2, "color": "#d62728"},
+                "sampling": "lttb",
+                "xAxisIndex": 1,
+                "yAxisIndex": 1,
+                "smooth": True,
+            },
         ],
+        "axisPointer": {"link": [{"xAxisIndex": "all"}]},
         "animation": True,
         "useDirtyRect": True,
     }
-    return _add_datazoom(opt, x_indices=[0,1])
+    return _add_datazoom(opt, x_indices=[0, 1])
 
 def create_imu_chart_option(df: pd.DataFrame) -> Dict[str, Any]:
     need = {"gyro_x", "gyro_y", "gyro_z", "accel_x", "accel_y", "accel_z"}
