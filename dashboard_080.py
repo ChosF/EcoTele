@@ -2226,7 +2226,7 @@ def render_gps_map_plotly(df: pd.DataFrame):
     else:
         df_filtered = df_filtered.reset_index(drop=True)
 
-    # Altitude cleaning (keep from provided code)
+    # Altitude cleaning 
     def _clean_altitude_series(
         alt_series: pd.Series,
         timestamps: Optional[pd.Series] = None,
@@ -2510,7 +2510,14 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
                 gaps = dt[dt > 3 * dt.median()]
                 report["dropouts"] = int((gaps).sum() // report["median_dt_s"]) if not gaps.empty else 0
                 report["max_gap_s"] = float(dt.max())
-                report["span"] = str((ts.max() - ts.min())).split(".")[0]
+
+                # Format total span as H:MM:SS 
+                span_td = ts.max() - ts.min()
+                total_seconds = int(span_td.total_seconds())
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                seconds = total_seconds % 60
+                report["span"] = f"{hours}:{minutes:02d}:{seconds:02d}"
             else:
                 report["median_dt_s"] = None
                 report["hz"] = None
@@ -2551,7 +2558,7 @@ def compute_data_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
 
 
 # ---------------------------
-# Dynamic Charts section (unchanged look)
+# Dynamic Charts section 
 # ---------------------------
 
 def render_dynamic_charts_section(df: pd.DataFrame):
