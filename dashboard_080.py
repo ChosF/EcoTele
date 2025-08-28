@@ -2745,7 +2745,7 @@ def main():
             options=["realtime_session", "historical"],
             format_func=lambda x: "🔴 Real-time"
             if x == "realtime_session"
-            else "📚 Historical Data",
+            else "📚 Historical",
             key="data_source_mode_radio",
         )
 
