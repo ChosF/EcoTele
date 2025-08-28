@@ -193,98 +193,61 @@ html, body {{
   z-index: 0;
 }}
 
-[data-testid="stHeader"] {{
-  background:
-    linear-gradient(90deg,
-      color-mix(in oklab, var(--glass-tint) 65%, transparent),
-      color-mix(in oklab, var(--glass-tint) 65%, transparent)),
-    color-mix(in oklab, Canvas 70%, transparent);
-  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  border-bottom: 1px solid var(--hairline);
-  box-shadow: var(--shadow-1);
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}}
-
-@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {{
-  [data-testid="stHeader"] {{
-    background:
-      linear-gradient(90deg,
-        color-mix(in oklab, CanvasText 8%, Canvas),
-        color-mix(in oklab, CanvasText 8%, Canvas));
-  }}
-}}
-.main-header {{
+[data-testid="stHeader"] .main-header, .main-header {{
   font-size: 2.35rem;
   font-weight: 900;
   letter-spacing: .2px;
   text-align: center;
   margin: .35rem 0 1.1rem;
-  transition: color 180ms ease, text-shadow 180ms ease, opacity 180ms ease;
+  transition: color .18s ease, text-shadow .18s ease, opacity .18s ease;
 
-  /* Fallback sólido por si el navegador NO soporta background-clip:text */
+  /* fallback solid text */
   color: rgba(18,22,28,0.98);
   -webkit-text-fill-color: rgba(18,22,28,0.98);
 }}
 
-/* Dark mode: claro/brillante sobre fondo oscuro (mantiene el look original) */
 @media (prefers-color-scheme: dark) {{
-  .main-header {{
-    /* fallback color para dark mode */
+  [data-testid="stHeader"] .main-header, .main-header {{
     color: rgba(250,250,250,0.96) !important;
     -webkit-text-fill-color: rgba(250,250,250,0.96) !important;
   }}
-
-  /* Si el navegador soporta background-clip:text, aplica gradiente recortado */
   @supports (-webkit-background-clip: text) {{
-    .main-header {{
+    [data-testid="stHeader"] .main-header, .main-header {{
       background: linear-gradient(
         90deg,
-        rgba(255,255,255,0.96),
-        rgba(220,220,225,0.92)
+        rgba(255,255,255,0.96) 0%,
+        rgba(220,220,225,0.92) 100%
       ) !important;
       -webkit-background-clip: text !important;
       background-clip: text !important;
       color: transparent !important;
       -webkit-text-fill-color: transparent !important;
-      text-shadow:
-        0 1px 0 rgba(0,0,0,0.22),
-        0 10px 30px rgba(0,0,0,0.50),
-        0 0.4px 0 rgba(41,151,255,0.06),
-        0 -0.4px 0 rgba(255,60,0,0.06);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.22), 0 10px 30px rgba(0,0,0,0.50);
     }}
   }}
 }}
 
-/* Light mode: gradiente oscuro para buen contraste sobre fondo claro */
 @media (prefers-color-scheme: light) {{
-  .main-header {{
-    /* fallback color para light mode (en navegadores sin soporte de clip) */
+  [data-testid="stHeader"] .main-header, .main-header {{
     color: rgba(18,22,28,0.98) !important;
     -webkit-text-fill-color: rgba(18,22,28,0.98) !important;
   }}
-
-  /* Si el navegador soporta background-clip:text, aplica gradiente oscuro recortado */
   @supports (-webkit-background-clip: text) {{
-    .main-header {{
+    [data-testid="stHeader"] .main-header, .main-header {{
       background: linear-gradient(
         90deg,
-        rgba(28,34,42,0.98),
-        rgba(44,64,78,0.98)
+        #1f2937 0%,
+        #2b3b4d 40%,
+        #3b5066 100%
       ) !important;
       -webkit-background-clip: text !important;
       background-clip: text !important;
       color: transparent !important;
       -webkit-text-fill-color: transparent !important;
-      text-shadow:
-        0 1px 0 rgba(255,255,255,0.92),
-        0 6px 18px rgba(0,0,0,0.06);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.95), 0 4px 14px rgba(0,0,0,0.06);
     }}
   }}
 }}
-
 .status-indicator {{
   display: flex; align-items: center; justify-content: center;
   padding: .55rem .9rem; border-radius: 999px; font-weight: 700; font-size: .9rem;
