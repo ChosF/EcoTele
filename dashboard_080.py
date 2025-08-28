@@ -525,6 +525,23 @@ iframe[title="streamlit_echarts.st_echarts"] {{
     transition: none !important;
     transform: none !important;
   }}
+@media (prefers-color-scheme: light) {
+  .main-header {
+    /* darker gradient for improved readability while keeping the clipped style */
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklab, CanvasText 48%, var(--text)),
+      color-mix(in oklab, CanvasText 28%, var(--text))
+    ) !important;
+
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+
+    text-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+}
 
 }}
 </style>
@@ -570,6 +587,7 @@ def inject_interaction_js():
         el.addEventListener('mouseleave', () => reset(el));
       });
     }
+    
   } catch (e) {}
 })();
 </script>
