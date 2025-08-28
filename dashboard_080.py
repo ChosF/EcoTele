@@ -525,23 +525,24 @@ iframe[title="streamlit_echarts.st_echarts"] {{
     transition: none !important;
     transform: none !important;
   }}
-@media (prefers-color-scheme: light) {
-  .main-header {
-    /* darker gradient for improved readability while keeping the clipped style */
-    background: linear-gradient(
-      90deg,
-      color-mix(in oklab, CanvasText 48%, var(--text)),
-      color-mix(in oklab, CanvasText 28%, var(--text))
-    ) !important;
+@media (prefers-color-scheme: light) {{
+      .main-header {{
+        /* darker gradient while keeping text clipped to the gradient */
+        background: linear-gradient(
+          90deg,
+          color-mix(in oklab, CanvasText 48%, var(--text)),
+          color-mix(in oklab, CanvasText 28%, var(--text))
+        ) !important;
 
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    color: transparent !important;
-    -webkit-text-fill-color: transparent !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        color: transparent !important;
+        -webkit-text-fill-color: transparent !important;
 
-    text-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-
+        /* subtle shadow so the text keeps depth but stays readable */
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      }}
+    }}
 
 }}
 </style>
