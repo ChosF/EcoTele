@@ -261,8 +261,6 @@ html, body {{
       0 6px 18px rgba(0,0,0,0.06) !important;
   }}
 }}
-}
-}}
 
 .status-indicator {{
   display: flex; align-items: center; justify-content: center;
