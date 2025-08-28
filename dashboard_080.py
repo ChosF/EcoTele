@@ -216,7 +216,6 @@ html, body {{
         color-mix(in oklab, CanvasText 8%, Canvas));
   }}
 }}
-
 .main-header {{
   font-size: 2.35rem;
   font-weight: 900;
@@ -234,6 +233,23 @@ html, body {{
     0 10px 30px rgba(0,0,0,0.18),
     0 0.4px 0 rgba(41,151,255,0.06),
     0 -0.4px 0 rgba(255,60,0,0.06);
+  transition: color .18s ease, text-shadow .18s ease, opacity .18s ease;
+}
+
+@media (prefers-color-scheme: light) {{
+  .main-header {{
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    color: rgba(20,26,32,0.98) !important;
+    -webkit-text-fill-color: rgba(20,26,32,0.98) !important;
+    opacity: 1 !important;
+    filter: none !important;
+    text-shadow:
+      0 1px 0 rgba(255,255,255,0.85),
+      0 6px 18px rgba(0,0,0,0.06);
+  }}
+}
 }}
 
 .status-indicator {{
@@ -525,31 +541,6 @@ iframe[title="streamlit_echarts.st_echarts"] {{
     transition: none !important;
     transform: none !important;
   }}
-@media (prefers-color-scheme: light) {{
-      /* Target the Streamlit header and the .main-header element */
-      [data-testid="stHeader"] .main-header,
-      .main-header {{
-        /* remove clipped gradient so text becomes a solid, readable color */
-        background-image: none !important;
-        background: none !important;
-        -webkit-background-clip: unset !important;
-        background-clip: unset !important;
-
-        /* dark text for high contrast in light mode */
-        color: rgba(26, 32, 38, 0.96) !important;
-        -webkit-text-fill-color: rgba(26, 32, 38, 0.96) !important;
-
-        /* cancel any opacity / filter applied elsewhere */
-        opacity: 1 !important;
-        filter: none !important;
-
-        /* subtle readable shadow */
-        text-shadow: 0 1px 0 rgba(255,255,255,0.9) !important;
-      }}
-    }}
-@media (prefers-color-scheme: light) {{
-      .main-header {{ outline: 3px solid rgba(255,0,0,0.8) !important; }}
-    }}
 }}
 </style>
 """
